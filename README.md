@@ -1,7 +1,7 @@
 GRIM
 ====
 
-###Graphical Inference with Ruby
+###Graphical Inference Modelling with Ruby
 
 Coding in Ruby what I learnt in "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm).
 
