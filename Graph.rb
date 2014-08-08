@@ -1,6 +1,3 @@
-require 'rubygems'
-require 'pp'
-
 class Graph # Undirected Graph
 
 	attr_reader :size, :nodes, :edges

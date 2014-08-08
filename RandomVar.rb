@@ -1,6 +1,3 @@
-require 'rubygems'
-
-
 class RandomVar
 
   attr_reader :id, :card, :ass, :name, :opts

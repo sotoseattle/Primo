@@ -1,10 +1,6 @@
-require 'rubygems'
-require 'spec_helper'
-require "rspec"
-
-describe "RandomVar"  do
+describe RandomVar  do
 	
-	describe "when #initialize a new random variable" do
+	context "#initialize" do
 		
 		it "with only a single possible value" do
 			expect RandomVar.new(1,1).card == 1

@@ -1,8 +1,3 @@
-require 'rubygems'
-require 'benchmark'
-
-require 'pp'
-require 'ap'
 require './CliqueTree'
 
 # CYSTIC FIBROSIS BAYESIAN NETWORK

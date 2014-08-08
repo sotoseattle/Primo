@@ -1,5 +1,3 @@
-require 'rubygems'
-
 require_relative './Graph'
 
 class InducedMarkovNet < Graph

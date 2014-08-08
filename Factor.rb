@@ -1,6 +1,5 @@
-require 'rubygems'
-require 'set'
 require 'narray'
+require 'set'
 
 require_relative 'RandomVar'
 

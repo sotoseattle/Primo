@@ -1,5 +1,3 @@
-require 'rubygems'
-
 require_relative './Tree'
 require_relative './InducedMarkovNet'
 require_relative './Factor'
