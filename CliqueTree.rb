@@ -45,8 +45,8 @@ class CliqueTree < Tree
         end
         
         tau = work_f.pop.clone
-        work_f.each{|fu| tau.multiply!(fu, false)}
-        tau.marginalize!(target_var)
+        work_f.each{|fu| tau * fu}
+        tau % target_var
         taus << tau
         
         # connect nodes of vars inside new factor (in g)
@@ -66,7 +66,7 @@ class CliqueTree < Tree
     factors.each do |f|
       i = @nodes.index{|n| Set.new(f.vars).subset?(n)}
       if @factors[i]
-        @factors[i].multiply!(f, false)
+        @factors[i] * f
       else
         @factors[i] = f.clone
       end
@@ -119,13 +119,13 @@ class CliqueTree < Tree
     
     # multiply/sum by incoming messages
     mess.each do |ms|
-      is_max ? d.sum!(ms, false) : d.multiply!(ms, false)
+      is_max ? d+ms : d*ms
     end
 
     # marginalized to setsep vars
     d.vars.each do |rv|
       if !(@nodes[from_v] & @nodes[to_w]).include?(rv)
-        is_max ? d.max_marginalize!(rv) : d.marginalize!(rv)
+        is_max ? d.max_marginalize!(rv) : d%rv
       end
     end
     return d
@@ -148,7 +148,7 @@ class CliqueTree < Tree
       @edges[v].each do |w|
         pos = edges[w].index(v)
         delta = @deltas[w][pos]
-        is_max ? belief.sum!(delta, false) : belief.multiply!(delta, false)
+        is_max ? belief + delta : belief * delta
       end
       @betas[v] = belief
     end

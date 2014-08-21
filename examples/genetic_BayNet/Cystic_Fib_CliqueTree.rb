@@ -47,7 +47,7 @@ class Person
   def observe(ass, var_type)
     rv = instance_variable_get("@#{var_type}")
     f = instance_variable_get("@f_#{var_type}")
-    f = f.reduce!({rv=> ass}, true)
+    f = f.reduce({rv=> ass}).norm
   end
 end
 
@@ -77,8 +77,8 @@ class Family
   def query(name, var_type)
     rv = self[name].instance_variable_get("@#{var_type}")
     b = @clique_tree.betas.find{|b| b.vars.include?(rv)}
-    b.marginalize_all_but!(rv)
-    b = b.normalize!.vals.to_a
+    b.marginalize_all_but(rv)
+    b = b.norm.vals.to_a
     sol = {}
     rv.card.times do |i|
       sol[rv.ass[i]]=b[i]

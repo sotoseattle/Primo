@@ -1,36 +1,26 @@
 class RandomVar
 
-  attr_reader :id, :card, :ass, :name, :opts
+  attr_reader :id, :card, :ass, :name
 
-  def initialize(id, card, name='', ass=nil, opts={})
+  def initialize(id, card, name='', ass=nil)
     @id = id.to_i
-
     @card = card.to_i
-    if ass
-      ass = Array(ass)
-      raise ArgumentError.new() if ass.size!=@card
-      @ass = ass
-    else
-      @ass = (0...@card).to_a
-    end
-    
     @name = name.to_s
-    @opts = opts.to_h
-
-    raise ArgumentError.new() if @card==0
+    @ass = (ass ? Array(ass) : (0...@card).to_a)
+    raise ArgumentError.new if @card==0
+    raise ArgumentError.new if @ass.size!=@card
   end
 
   def ==(other)
-    self.id == other.id
+    id == other.id
   end
 
   def <=>(other)
-    @id <=> other.id
+    id <=> other.id
   end
 
   def to_s
-    #"#{self.class}: [id: #{@id}] card: #{@card} '#{@name}'"
-    "#{@name}"
+    "#{@name}" #"#{self.class}: [id: #{@id}] card: #{@card} '#{@name}'"
   end
 
 end
