@@ -6,17 +6,16 @@ require_relative 'RandomVar'
 class Factor
   
   private
-  attr_accessor :vals, :vars, :cards
+  attr_writer :vars, :vals
   public
-  attr_reader :vars, :vals, :cards
+  attr_reader :vars, :vals
 
   def initialize(variables, arr=nil)
     @vars = Array(variables)
-    @cards = @vars.map{|e| e.card}
     @vals = if arr
-      NArray.to_na(arr).reshape!(*cards)
+      NArray[arr].reshape!(*cardinalities)
     else
-      NArray.float(*cards)
+      NArray.float(*cardinalities)
     end
     raise ArgumentError.new if @vars.empty?
     raise ArgumentError.new unless @vars.all?{|e| e.class<=RandomVar}
@@ -30,7 +29,7 @@ class Factor
     rv.ass.index(assignment)
   end
 
-
+  # utility function for results over a CPD
   def [](assignments)
     indices = Array(assignments).each_with_index.map do |s,i| 
       assignment_index(vars[i], s)
@@ -49,8 +48,7 @@ class Factor
     na = yield narr1, narr2
 
     self.vars = all_vars
-    self.cards = cardinalities
-    self.vals = na.reshape!(*cards)
+    self.vals = na.reshape!(*cardinalities)
     return self
   end
   def *(other)
@@ -73,7 +71,6 @@ class Factor
     axis_to_marginalize = vars.index(variable)
     if axis_to_marginalize && vars.size>1
       vars.delete_at(axis_to_marginalize)
-      cards.delete_at(axis_to_marginalize)
       self.vals = vals.sum(axis_to_marginalize)
     end
     return self
@@ -89,7 +86,6 @@ class Factor
       self.vals = vals.sum(axis-i)
     end
     self.vars = [variable]
-    self.cards = cardinalities
     return self
   end
 
@@ -99,13 +95,11 @@ class Factor
     observed_index = vars.map do |rv|
       evidence.has_key?(rv) ? assignment_index(rv, evidence[rv]) : true
     end
-    zeroes = NArray.float(*cards)
+    zeroes = NArray.float(*cardinalities)
     zeroes[*observed_index] = vals[*observed_index]
     self.vals = zeroes
     return self
   end
-
-  
 
   def to_s
     "Factor: [#{vars.map{|e| e.id}.join(', ')}]"
@@ -128,7 +122,7 @@ class Factor
     multiplier = new_cards.reduce(multiplier, :*)
       
     flat = [vals.flatten] * multiplier
-    na = NArray.to_na(flat).reshape!(*cards, *new_cards)
+    na = NArray.to_na(flat).reshape!(*cardinalities, *new_cards)
 
     if new_order != [*(0..whole_vars.size)]
       na = na.transpose(*new_order)
