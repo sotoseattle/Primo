@@ -47,10 +47,6 @@ class Person
 		factor.norm
 	end
 
-	def phen_mendelian
-		return phen_probabistic({'FF'=>1.0, 'Ff'=>1.0, 'ff'=>0.0})
-	end
-
 	def phen_probabistic(stats)
 		values = gen.ass.map{|g| [stats[g], 1-stats[g]]}
 		return Factor.new([phn, gen], values)

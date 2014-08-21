@@ -115,20 +115,20 @@ describe Factor  do
   end
 
   context "#reduce" do
-    it "example I" do
+    it "does nothing if vars are not in scope" do
       expect(a.clone.reduce({v2=>0, v3=>1})).to match_each_cell(a.vals, TOL)
     end
-    it "example II" do
+    it "works example I" do
       left = b.reduce({v2=>0, v3=>1})
       right = NArray.to_na([0.59, 0.0, 0.22, 0.0]).reshape!(2,2)
       expect(left).to match_each_cell(right, TOL)
     end
-    it "example III" do
+    it "works example II" do
       left = Factor.new([v3, v2], [0.39, 0.61, 0.06, 0.94]).reduce({v2=>0, v3=>1})
       right = NArray.to_na([0.0, 0.61, 0.0, 0.0]).reshape!(2,2)
       expect(left).to match_each_cell(right, TOL)
     end
-    it "example IV" do
+    it "works example III" do
       left = c.reduce({v3=>0})
       right = NArray.to_na([0.25, 0.0, 0.08, 0.0, 0.05, 0.0, 0.0, 0.0, 0.15, 0.0, 0.09, 0.0]).reshape!(2,2,3)
       expect(left).to match_each_cell(right, TOL)

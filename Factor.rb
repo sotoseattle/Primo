@@ -22,41 +22,24 @@ class Factor
     raise ArgumentError.new unless @vars.all?{|e| e.class<=RandomVar}
   end
 
+  # isolation ward for calls to RandomVar methods (poodr)
+  def cardinalities(variable_arr=vars)
+    variable_arr.map{|e| e.card}
+  end
+  def assignment_index(rv, assignment)
+    rv.ass.index(assignment)
+  end
+
 
   def [](assignments)
     indices = Array(assignments).each_with_index.map do |s,i| 
-      vars[i].ass.index(s)
+      assignment_index(vars[i], s)
     end
     return vals[*indices]
   end
-  
-  def grow_axes(whole_vars)
-    return vals.flatten if vars==whole_vars
 
-    multiplier = 1.0
-    new_vars = whole_vars.reject{|rv| vars.include?(rv)}
-
-    old_order_vars = [*vars, *new_vars]
-    new_order = whole_vars.map{|e| old_order_vars.index(e)}
-
-    new_cards = new_vars.map{|v| multiplier *= v.card; v.card}
-      
-    flat = [vals.flatten] * multiplier
-    na = NArray.to_na(flat).reshape!(*cards, *new_cards)
-
-    if new_order != [*(0..whole_vars.size)]
-      na = na.transpose(*new_order)
-    end
-
-    return na.flatten
-  end
-
-  def *(other)
-    modify_in_place(other, &:*)
-  end
-  def +(other)
-    modify_in_place(other, &:+)
-  end
+  # basic operation on two factors (*,+). 
+  # the resulting factor overwrites the caller
   def modify_in_place(other, &block)
     return self unless other
     all_vars = [*vars, *other.vars].uniq.sort
@@ -66,17 +49,26 @@ class Factor
     na = yield narr1, narr2
 
     self.vars = all_vars
-    self.cards = vars.map{|e| e.card}
+    self.cards = cardinalities
     self.vals = na.reshape!(*cards)
     return self
   end
+  def *(other)
+    modify_in_place(other, &:*)
+  end
+  def +(other)
+    modify_in_place(other, &:+)
+  end
 
+  # normalize values so it adds up to 1
   def norm
     cumsum = vals.sum(*(0...vars.size))
     self.vals = vals/cumsum
     return self
   end
 
+  # eliminates a dimension / variable by adding along its axis
+  # allows for chaining operations i.e. f1 % v1 % v2
   def marginalize(variable)
     axis_to_marginalize = vars.index(variable)
     if axis_to_marginalize && vars.size>1
@@ -88,6 +80,7 @@ class Factor
   end
   alias_method :%, :marginalize
 
+  # a faster implementation for a bulk operation
   def marginalize_all_but(variable)
     axis_to_keep = vars.index(variable)
     raise ArgumentError.new unless axis_to_keep
@@ -95,29 +88,52 @@ class Factor
     axes_to_remove.each_with_index do |axis, i|
       self.vals = vals.sum(axis-i)
     end
-    vars = [variable]
-    cards = [variable.card]
+    self.vars = [variable]
+    self.cards = cardinalities
     return self
   end
 
+  # set values to 0.0 based on observed variables
+  # i.e. if we know color is red, then p(blue)=0.0
   def reduce(evidence)
-    vars.each_with_index do |rv, i|
-      if evidence.has_key?(rv)
-        rv.ass.each_with_index do |as, j|
-          if as!=evidence[rv]
-            temp = [true]*vars.size
-            temp[i] = j
-            vals[*temp] = 0.0
-          end
-        end
-      end
+    observed_index = vars.map do |rv|
+      evidence.has_key?(rv) ? assignment_index(rv, evidence[rv]) : true
     end
+    zeroes = NArray.float(*cards)
+    zeroes[*observed_index] = vals[*observed_index]
+    self.vals = zeroes
     return self
   end
 
+  
 
   def to_s
     "Factor: [#{vars.map{|e| e.id}.join(', ')}]"
   end
   
+  protected
+  # prior to *,+ both factors need to be of equal dimensions
+  # this complicated method grows extra dimensions (axis) according to 
+  # var map, copy-pasting in higher dims the values from lower dimensions
+  def grow_axes(whole_vars)
+    return vals.flatten if vars==whole_vars
+
+    multiplier = 1.0
+    new_vars = whole_vars.reject{|rv| vars.include?(rv)}
+
+    old_order_vars = [*vars, *new_vars]
+    new_order = whole_vars.map{|e| old_order_vars.index(e)}
+
+    new_cards = cardinalities(new_vars)
+    multiplier = new_cards.reduce(multiplier, :*)
+      
+    flat = [vals.flatten] * multiplier
+    na = NArray.to_na(flat).reshape!(*cards, *new_cards)
+
+    if new_order != [*(0..whole_vars.size)]
+      na = na.transpose(*new_order)
+    end
+
+    return na.flatten
+  end  
 end

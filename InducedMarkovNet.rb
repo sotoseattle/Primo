@@ -3,9 +3,10 @@ require_relative './Graph'
 class InducedMarkovNet < Graph
 	# undirected graph where each node holds a single random variable
 	# nodes connected if show up together in a factor
-
+  private
 	attr_accessor :factors
-
+  public
+  
 	def initialize(factors)
 		@factors = factors
 
@@ -22,13 +23,13 @@ class InducedMarkovNet < Graph
 
 	def first_min_neighbor_var
     minino, pos = Float::INFINITY, nil
-    @edges.each_with_index do |a, i|
+    edges.each_with_index do |a, i|
     	s = a.size
       if s>0 and s<minino
       	minino, pos = s, i 
       end
     end
-    return [pos, @nodes[pos].first]
+    return [pos, nodes[pos].first]
   end
 end
 

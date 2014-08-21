@@ -10,18 +10,18 @@ class Graph # Undirected Graph
 
   def add_vertex(contents)
   	n = Set.new(contents)
-    @nodes << n
-    @edges << []
-    @size += 1
+    nodes << n
+    edges << []
+    size += 1
     return n
   end
 
   def add_edge(v,w)
   	v, w = v.to_i, w.to_i
-  	raise ArgumentError.new() if v>=@size or v<0 or w>=@size or w<0
+  	raise ArgumentError.new() if v>=size or v<0 or w>=size or w<0
     return if v==w
-    @edges[v] << w unless @edges[v].include?(w)
-    @edges[w] << v unless @edges[w].include?(v)
+    edges[v] << w unless edges[v].include?(w)
+    edges[w] << v unless edges[w].include?(v)
   end
   
   def connect_all(xyz)
@@ -33,9 +33,9 @@ class Graph # Undirected Graph
 
   def to_s
     s = "#{@size} vertices\n"
-    @nodes.each_with_index do |v,i|
+    nodes.each_with_index do |v,i|
     	s << "[#{i}] #{v.to_a.join(',')}: "
-    	s << "#{@edges[i].map{|e| @nodes[e].to_a.join(',')}.join(' || ')}\n"
+    	s << "#{edges[i].map{|e| nodes[e].to_a.join(',')}.join(' || ')}\n"
     end
     return s
   end
