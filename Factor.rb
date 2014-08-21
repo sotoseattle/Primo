@@ -95,7 +95,7 @@ class Factor
     observed_index = vars.map do |rv|
       evidence.has_key?(rv) ? assignment_index(rv, evidence[rv]) : true
     end
-    zeroes = NArray.float(*cardinalities)
+    zeroes = NArray.float(*vals.shape)
     zeroes[*observed_index] = vals[*observed_index]
     self.vals = zeroes
     return self
@@ -122,7 +122,7 @@ class Factor
     multiplier = new_cards.reduce(multiplier, :*)
       
     flat = [vals.flatten] * multiplier
-    na = NArray.to_na(flat).reshape!(*cardinalities, *new_cards)
+    na = NArray.to_na(flat).reshape!(*vals.shape, *new_cards)
 
     if new_order != [*(0..whole_vars.size)]
       na = na.transpose(*new_order)
