@@ -37,8 +37,7 @@ class Factor
     return vals[*indices]
   end
 
-  # basic operation on two factors (*,+). 
-  # the resulting factor overwrites the caller
+  # basic operation on two factors (*,+). Resulting factor overwrites caller
   def modify_in_place(other, &block)
     return self unless other
     all_vars = [*vars, *other.vars].uniq.sort
