@@ -8,14 +8,14 @@ require 'pp'
 require_relative '../../Factor'
 
 class PhenoType < RandomVar
-	def initialize(id, name)
-		super(id, 2, name, ['present', 'absent'])
+	def initialize(name)
+		super(2, name, ['present', 'absent'])
 	end
 end
 
 class AlleleType < RandomVar
-	def initialize(id, name)
-		super(id, 3, name, ['F', 'f', 'n'])
+	def initialize(name)
+		super(3, name, ['F', 'f', 'n'])
 	end
 end
 
@@ -24,13 +24,13 @@ class Person
 	private
 	attr_accessor :factor, :dad, :mom
 	public
-	attr_reader :id, :name, :allel_1, :allel_2, :pheno, :factor
+	attr_reader :name, :allel_1, :allel_2, :pheno, :factor
 
-	def initialize(id, name)
+	def initialize(name)
 		@name = name
-		@pheno = PhenoType.new(id, name)
-		@allel_1 = AlleleType.new(1000+id, name)
-		@allel_2 = AlleleType.new(2000+id, name)
+		@pheno = PhenoType.new(name)
+		@allel_1 = AlleleType.new(name)
+		@allel_2 = AlleleType.new(name)
 	end
 
 	def is_son_of(daddy, mommy)
@@ -75,7 +75,7 @@ class Family
 	attr_reader :members
 
 	def initialize(names)
-		@members = names.each_with_index.map{|name,i| Person.new(i, name)}
+		@members = names.map{|name| Person.new(name)}
 	end
 
 	def compute_factors

@@ -8,14 +8,14 @@ require 'pp'
 require_relative '../../Factor'
 
 class Phenotype < RandomVar
-	def initialize(id, name)
-		super(id, 2, name, ['present', 'absent'])
+	def initialize(name)
+		super(2, name, ['present', 'absent'])
 	end
 end
 
 class Genotype < RandomVar
-	def initialize(id, name)
-		super(id, 3, name, ['FF', 'Ff', 'ff'])
+	def initialize(name)
+		super(3, name, ['FF', 'Ff', 'ff'])
 	end
 end
 
@@ -23,15 +23,15 @@ class Person
 	private
 	attr_accessor :factor, :dad, :mom
 	public
-	attr_reader :id, :name, :gen, :phn, :factor
+	attr_reader :name, :gen, :phn, :factor
 
 	PHENO_STATS = {'FF'=>0.8, 'Ff'=>0.6, 'ff'=>0.1}
 	GEN_STATS = {'F'=>0.1, 'f'=>0.9}
 
-	def initialize(id, name)
+	def initialize(name)
 		@name = name
-		@phn = Phenotype.new(id, name)
-		@gen = Genotype.new(1000+id, name) # jump of 1,000 to avoid overlap
+		@phn = Phenotype.new(name)
+		@gen = Genotype.new(name) # jump of 1,000 to avoid overlap
 		@dad = nil
 		@mom = nil
 	end
@@ -85,7 +85,7 @@ class Family
 	attr_reader :members
 
 	def initialize(names)
-		@members = names.each_with_index.map{|name,i| Person.new(i, name)}
+		@members = names.map{|name| Person.new(name)}
 	end
 
 	def compute_factors

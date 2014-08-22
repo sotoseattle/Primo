@@ -40,8 +40,8 @@ class Factor
   # basic operation on two factors (*,+). Resulting factor overwrites caller
   def modify_in_place(other, &block)
     return self unless other
-    all_vars = [*vars, *other.vars].uniq.sort
-
+    all_vars = [*vars, *other.vars].uniq.sort.reverse
+    
     narr1 = self.grow_axes(all_vars)
     narr2 = other.grow_axes(all_vars)
     na = yield narr1, narr2
@@ -101,7 +101,8 @@ class Factor
   end
 
   def to_s
-    "Factor: [#{vars.map{|e| e.id}.join(', ')}]"
+    #"Factor: [#{vars.map{|e| e.id}.join(', ')}]"
+    "Factor: [#{vars.map{|e| e.name}.join(', ')}]"
   end
   
   protected
