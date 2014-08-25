@@ -5,7 +5,7 @@
 require 'rubygems'
 require 'pp'
 
-require_relative '../../Factor'
+require_relative '../../lib/factors/Factor'
 
 class Phenotype < RandomVar
 	def initialize(name)
@@ -93,8 +93,9 @@ class Family
 	end
 
 	def compute_whole_joint
-		a = members.first.factor
-		return members[1..-1].reduce(a){|a,b| (a*b.factor).norm}
+		fs = members.map(&:factor)
+		fs.unshift(fs.first.to_ones)
+		fs.reduce{|a,b| (a*b).norm}
 	end
 
 	def [](name)

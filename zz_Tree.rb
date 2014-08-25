@@ -1,13 +1,11 @@
-require_relative './Graph.rb'
+# A Clique Tree is such a complex thing that I divide its code between
+# a generator (just to build it) and the class itself (calibrate and infer)
 
-class Tree < Graph
+class TreeGenerator ### WORK ON THIS
 
-	def initialize(*args)
-		super(args)
-	end
 
 	def grow_tree(*args)
-		raise StandardError.new('method should be override')
+		raise NotImplementedError, 'method should be override'
 	end
 
   def prune_tree # <====== REFACTOR IN SINGLE METHOD CALL

@@ -1,7 +1,5 @@
 require 'narray'
-require 'set'
-
-require_relative 'RandomVar'
+require_relative './RandomVar'
 
 class Factor
   
@@ -51,10 +49,20 @@ class Factor
     return self
   end
   def *(other)
-    modify_in_place(other, &:*)
+    if other.is_a? Numeric
+      self.vals = vals * other
+    else
+      modify_in_place(other, &:*)
+    end
+    return self
   end
   def +(other)
-    modify_in_place(other, &:+)
+    if other.is_a? Numeric
+      self.vals = vals + other
+    else
+      modify_in_place(other, &:+)
+    end
+    return self
   end
 
   # normalize values so it adds up to 1
@@ -104,7 +112,20 @@ class Factor
     #"Factor: [#{vars.map{|e| e.id}.join(', ')}]"
     "Factor: [#{vars.map{|e| e.name}.join(', ')}]"
   end
-  
+
+  def holds?(variable)
+    vars.include?(variable)
+  end
+
+  # Returns a copy with same vars but all values to 1.0 
+  def to_ones
+    return (Factor.new(vars) + 1.0)
+  end
+
+  def clone
+    return Factor.new(vars.dup, vals.dup)
+  end
+
   protected
   # prior to *,+ both factors need to be of equal dimensions
   # this complicated method grows extra dimensions (axis) according to 

@@ -2,8 +2,8 @@ require_relative './Tree'
 require_relative './InducedMarkovNet'
 require_relative './Factor'
 
-class CliqueTree < Tree
-
+class CliqueTree < Graph
+  include Tree
 
   attr_reader :betas
 
