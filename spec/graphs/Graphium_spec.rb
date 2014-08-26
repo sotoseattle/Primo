@@ -120,7 +120,7 @@ describe "Graphium Role" do
     end
   end
 
-  context "#prune" do
+  context "#simplify_graph" do
     context "when in terms of variables, no node is a subset of another" do
       it "does nothing" do
         n1 = subject.add_node(v1)
@@ -129,7 +129,7 @@ describe "Graphium Role" do
         subject.add_edges(n1,n2)
         subject.add_edges(n2,n3)
         
-        expect {subject.prune}.not_to change {subject.nodes.size}
+        expect {subject.simplify_graph}.not_to change {subject.nodes.size}
       end
     end
     context "when a node's variables are a subset of another node" do
@@ -139,7 +139,7 @@ describe "Graphium Role" do
         n3 = subject.add_node(v4)
         subject.add_edges(n1,n2)
         subject.add_edges(n2,n3)
-        expect{subject.prune}.to change{subject.nodes.size}.by(-1)
+        expect{subject.simplify_graph}.to change{subject.nodes.size}.by(-1)
         expect(subject.nodes.first.vars.size).to eq(3)
         expect(subject.nodes.first.vars).to include(v1,v2,v3)
         expect(subject.nodes.last.vars.size).to eq(1)
@@ -151,7 +151,7 @@ describe "Graphium Role" do
         n3 = subject.add_node(v3)
         subject.add_edges(n1,n2)
         subject.add_edges(n2,n3)
-        expect{subject.prune}.to change{subject.nodes.size}.by(-2)
+        expect{subject.simplify_graph}.to change{subject.nodes.size}.by(-2)
         expect(subject.nodes.first.vars.size).to eq(3)
         expect(subject.nodes.first.vars).to include(v1,v2,v3)
       end
@@ -164,7 +164,7 @@ describe "Graphium Role" do
         subject.add_edges(n1,n3)
         subject.add_edges(n2,n4)
         subject.add_edges(n3,n4)
-        expect{subject.prune}.to change{subject.nodes.size}.by(-2)
+        expect{subject.simplify_graph}.to change{subject.nodes.size}.by(-2)
         expect(subject.nodes.first.vars.size).to eq(3)
         expect(subject.nodes.first.vars).to include(v1,v2,v3)
         expect(subject.nodes.last.vars.size).to eq(1)
@@ -173,24 +173,50 @@ describe "Graphium Role" do
     end
   end
 
-  context "#get_superset" do
-    it "returns [] if no matching node found" do
-      v5 = RandomVar.new(67,"pepe")
-      expect(subject.get_superset([v5])).to be_empty
-    end
-    it "returns the matching nodes in descending order of size" do
-      n1 = subject.add_node(v1,v2,v3)
-      n2 = subject.add_node(v2,v3)
-      n3 = subject.add_node(v1,v2,v3,v4)
-      n4 = subject.add_node(v2,v4)
+  # context "#get_superset" do
+  #   it "returns [] if no matching node found" do
+  #     v5 = RandomVar.new(67,"pepe")
+  #     expect(subject.get_superset([v5])).to be_empty
+  #   end
+  #   it "returns the matching nodes in descending order of size" do
+  #     n1 = subject.add_node(v1,v2,v3)
+  #     n2 = subject.add_node(v2,v3)
+  #     n3 = subject.add_node(v1,v2,v3,v4)
+  #     n4 = subject.add_node(v2,v4)
       
-      expect(subject.get_superset([v3])).to eq([n2,n1,n3])
-      expect(subject.get_superset([v2]).size).to eq(4)
-      expect(subject.get_superset([v1])).to eq([n1,n3])
-      expect(subject.get_superset([v4,v2])).to eq([n4,n3])
-      expect(subject.get_superset([v2,v4])).to eq([n4,n3])
-      expect(subject.get_superset([v1,v2,v3])).to eq([n1,n3])
-      expect(subject.get_superset([v1,v2,v3,v4])).to eq([n3])
+  #     expect(subject.get_superset([v3])).to eq([n2,n1,n3])
+  #     expect(subject.get_superset([v2]).size).to eq(4)
+  #     expect(subject.get_superset([v1])).to eq([n1,n3])
+  #     expect(subject.get_superset([v4,v2])).to eq([n4,n3])
+  #     expect(subject.get_superset([v2,v4])).to eq([n4,n3])
+  #     expect(subject.get_superset([v1,v2,v3])).to eq([n1,n3])
+  #     expect(subject.get_superset([v1,v2,v3,v4])).to eq([n3])
+  #   end
+  # end
+
+  context "#breadth_first_search_path" do
+    # Algorithms by Sedgewick example on page 539
+    context "returns an ordered path that visits all nodes" do
+      let(:g){subject}
+      let(:path) {g.breadth_first_search_path(g.nodes[0])}
+      before do
+        (0...6).each{|i| g.add_node(RandomVar.new(2, "v#{i}"))}
+        g.link_between(g.nodes[0], [g.nodes[1],g.nodes[2],g.nodes[5]])
+        g.add_edges(g.nodes[1],g.nodes[2])
+        g.link_between(g.nodes[3], [g.nodes[2],g.nodes[4],g.nodes[5]])
+        g.add_edges(g.nodes[2],g.nodes[4])
+      end
+      it "has minimum number of steps to travel the graph" do
+        expect(path.size).to eq(5)
+      end
+    
+      it "every step is an array of nodes with [origin, destination]" do
+        expect(path[0]).to eq([g.nodes[0],g.nodes[1]])
+        expect(path[1]).to eq([g.nodes[0],g.nodes[2]])
+        expect(path[2]).to eq([g.nodes[0],g.nodes[5]])
+        expect(path[3]).to eq([g.nodes[2],g.nodes[3]])
+        expect(path[4]).to eq([g.nodes[2],g.nodes[4]])
+      end
     end
   end
 end

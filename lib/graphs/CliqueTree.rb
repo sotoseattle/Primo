@@ -8,11 +8,15 @@ class CliqueTree
     @factors = Array(bunch_o_factors)
 
     generate_tree
-    prune
-
-    # initialize_potentials
-    
+    simplify_graph
+    setup_working_variables
+    assign_factors
   end
+
+  def calibrate
+  end
+
+
 
   private
 
@@ -41,22 +45,34 @@ class CliqueTree
         markov.disconnect(pick_node)
       end
     end
-    nodes.each{|n| n.bag={phi:nil}}
     self.factors = keep_factors
   end
-
   
-  def initialize_potentials
-    sorted_nodes = nodes.sort{|a,b| a.vars.size<=>b.vars.size}
-    sorted_nodes.each do |n|
-      n.bag[:phi] = Factor.new(n.vars) + 1.0
-      fmax = factors.find{|f| (f.vars-n.vars).empty?}
-      if fmax
-        n.bag[:phi] *= fmax
-        factors.delete(fmax)
-      end
+  def setup_working_variables
+    nodes.each do |n|
+      n.bag.delete(:tau)
+      n.bag[:phi] ||= Factor.new(n.vars) + 1.0
+      n.bag[:delta] = nil
+      n.bag[:beta] = nil
     end
   end
+
+  # Associate to each node the product of factors that share variables
+  def assign_factors
+    sorted_nodes = nodes.sort{|a,b| a.vars.size<=>b.vars.size}
+    factors.each do |f|
+      nn = sorted_nodes.find{|n| (f.vars-n.vars).empty?}
+      # puts "#{f} ===> #{nn}"
+      nn.bag[:phi] *= f
+    end
+  end
+
+  # Return the complete path (firing messages sequence)
+  def message_path
+    forwards = breadth_first_search_path(loneliest_node)
+    backwards = path.reverse.map{|a| a.reverse}
+    return (forwards + backwards)
+  end  
 
 
 end

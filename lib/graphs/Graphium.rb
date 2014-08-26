@@ -58,9 +58,9 @@ module Graphium
     return nodes.min{|n1,n2| n1.weight<=>n2.weight}
   end
 
-  # Simplifies graph by removing nodes whose variables are a subset of
-  # another node and relinks the superset with the subset's neighbors
-  def prune
+  # Removes nodes whose variables are a subset of another node and 
+  # relinks the superset with the subset's neighbors
+  def simplify_graph
     to_remove = []
     nodes.each do |n|
       n.edges.each do |neighbor|
@@ -74,11 +74,30 @@ module Graphium
     to_remove.each{|n| nodes.delete(n)}
   end
 
-  # Return an array of nodes whose variables include the variables input.
-  def get_superset(var_array)
-    sol = nodes.select{|n| (var_array-n.vars).empty?}
-    return sol.sort{|a,b| a.vars.size<=>b.vars.size}
+  # Breadth First Search algorithm
+  def breadth_first_search_path(start)
+    path = []
+    visited = Hash.new(false)
+    visited[start] = true
+    queue = [start]
+    while queue.size>0
+      n = queue.shift
+      n.edges.each do |w|
+        unless visited[w]
+          visited[w] = true
+          path << [n,w]
+          queue << w
+        end
+      end
+    end
+    return path
   end
+
+  # Return an array of nodes whose variables include the variables input.
+  # def get_superset(var_array)
+  #   sol = nodes.select{|n| (var_array-n.vars).empty?}
+  #   return sol.sort{|a,b| a.vars.size<=>b.vars.size}
+  # end
 
   def to_s
     s = "#{nodes.size} nodes\n"

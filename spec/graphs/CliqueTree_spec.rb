@@ -13,6 +13,17 @@ describe CliqueTree  do
     it {expect{CliqueTree.new(a,b,c)}.not_to raise_error}
     it {is_expected.to respond_to(:nodes)}
     it {is_expected.to respond_to(:factors)}
+    it "the node's bag holds potentials, deltas and betas" do
+      subject.nodes.each do |n|
+        expect(n.bag.keys).to include(:phi, :delta, :beta)
+      end
+    end
+    it "every node has a valid potential" do
+      subject.nodes.each do |n|
+        expect(n.bag[:phi].class).to eq(Factor)
+        expect(n.bag[:phi].vars).to include(*n.vars)
+      end
+    end
   end
 
   context "#generate_tree" do
@@ -30,24 +41,9 @@ describe CliqueTree  do
       expect(@ct.nodes[1].edges).to include(@ct.nodes[2])
       expect(@ct.nodes[2].edges).to include(@ct.nodes[0],@ct.nodes[0])
     end
-    it "each node has a :phi set to nil in the bag, and no more" do
-      @ct.nodes.each do |n|
-        expect(n.bag.size).to eq(1)
-        expect(n.bag[:phi]).to be_nil
-      end
-    end
   end
 
-  context "#initialize_potentials" do
-    it "xxx" do
-      copies_f = [a.clone, b.clone, c.clone]
-      ct = CliqueTree.new(a,b,c)
-      ct.send(:factors=, copies_f)  # resetting factors
-      puts ct
-      ct.send(:initialize_potentials)
-      expect(ct.nodes[1].bag[:phi].vals).to eq(c.vals)
-    end
-  end
+  
 
 
 
