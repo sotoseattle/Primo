@@ -65,7 +65,7 @@ class CliqueTree
   def setup_working_variables
     nodes.each do |n|
       n.bag.delete(:tau)
-      n.bag[:phi] = (Factor.new(n.vars) + 1).norm
+      n.bag[:phi] = (Factor.new({vars:n.vars}) + 1).norm
       n.bag[:beta] = nil
     end
   end

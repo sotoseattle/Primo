@@ -1,13 +1,13 @@
 describe InducedMarkov do
   
-  let(:v1){RandomVar.new(2,"v1")}
-  let(:v2){RandomVar.new(2,"v2")}
-  let(:v3){RandomVar.new(2,"v3")}
-  let(:v4){RandomVar.new(3,"v4")}
-  let(:a){Factor.new(v1, [0.11, 0.89])}
-  let(:b){Factor.new([v2, v1], [0.59, 0.41, 0.22, 0.78])}
-  let(:c){Factor.new([v3, v2, v4], [0.25, 0.35, 0.08, 0.16, 0.05, 
-                                    0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])}
+  let(:v1){RandomVar.new({card:2, name:"v1"})}
+  let(:v2){RandomVar.new({card:2, name:"v2"})}
+  let(:v3){RandomVar.new({card:2, name:"v3"})}
+  let(:v4){RandomVar.new({card:3, name:"v4"})}
+  let(:a){Factor.new({vars:v1, vals:[0.11, 0.89]})}
+  let(:b){Factor.new({vars:[v2, v1], vals:[0.59, 0.41, 0.22, 0.78]})}
+  let(:c){Factor.new({vars:[v3, v2, v4], vals:[0.25, 0.35, 0.08, 0.16, 0.05, 
+                                    0.07, 0, 0, 0.15, 0.21, 0.09, 0.18]})}
 
   context "#initialize" do
 

@@ -8,10 +8,11 @@ class Factor
   public
   attr_reader :vars, :vals
 
-  def initialize(variables, arr=nil)
-    @vars = Array(variables)
-    @vals = if arr
-      NArray[arr].reshape!(*cardinalities)
+  def initialize(args)
+    args.merge({vals:nil})
+    @vars = Array(args[:vars])
+    @vals = if args[:vals]
+      NArray[args[:vals]].reshape!(*cardinalities)
     else
       NArray.float(*cardinalities)
     end
@@ -119,11 +120,11 @@ class Factor
 
   # Returns a copy with same vars but all values to 1.0 
   def to_ones
-    return (Factor.new(vars) + 1.0)
+    return (Factor.new({vars:vars}) + 1.0)
   end
 
   def clone
-    return Factor.new(vars.dup, vals.dup)
+    return Factor.new({vars:vars.dup, vals:vals.dup})
   end
 
   protected

@@ -2,7 +2,22 @@ GEM
   remote: https://rubygems.org/
   specs:
     awesome_print (1.2.0)
+    diff-lcs (1.2.5)
     narray (0.6.0.9)
+    rspec (3.0.0)
+      rspec-core (~> 3.0.0)
+      rspec-expectations (~> 3.0.0)
+      rspec-mocks (~> 3.0.0)
+    rspec-autotest (1.0.0)
+      rspec-core (>= 2.99.0.beta1, < 4.0.0)
+    rspec-core (3.0.4)
+      rspec-support (~> 3.0.0)
+    rspec-expectations (3.0.4)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.0.0)
+    rspec-mocks (3.0.4)
+      rspec-support (~> 3.0.0)
+    rspec-support (3.0.4)
 
 PLATFORMS
   ruby
@@ -10,3 +25,5 @@ PLATFORMS
 DEPENDENCIES
   awesome_print
   narray
+  rspec
+  rspec-autotest

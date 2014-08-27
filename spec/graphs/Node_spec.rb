@@ -1,9 +1,9 @@
 describe Node  do
   
-  let(:v1){RandomVar.new(2, "v1")}
-  let(:v2){RandomVar.new(3, "v2")}
-  let(:v3){RandomVar.new(2, "v3")}
-  let(:v4){RandomVar.new(2, "v4")}
+  let(:v1){RandomVar.new({card:2, name:"v1"})}
+  let(:v2){RandomVar.new({card:3, name:"v2"})}
+  let(:v3){RandomVar.new({card:2, name:"v3"})}
+  let(:v4){RandomVar.new({card:2, name:"v4"})}
 
   context "#initialize" do
     context "without variables" do
@@ -14,7 +14,9 @@ describe Node  do
       it {is_expected.to respond_to(:vars)}
       it {is_expected.to respond_to(:neighbors)}
       it {expect(subject.vars.size).to eq(2)}
-      its(:neighbors) {should be_empty}
+      it "has no neighbors at creation" do
+        expect(subject.neighbors).to be_empty
+      end
     end
     context "with array of variables" do
       it {expect{Node.new([v1, v2, v2])}.not_to raise_error}

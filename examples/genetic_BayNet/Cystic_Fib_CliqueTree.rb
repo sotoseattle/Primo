@@ -20,35 +20,32 @@ require '../../lib/graphs/CliqueTree'
 
 class Phenotype < RandomVar
   def initialize(name)
-    super(2, name, ['present', 'absent'])
+    super({card:2, name:name, ass:['present', 'absent']})
   end
 end
 
 class Genotype < RandomVar
   def initialize(name)
-    super(3, name, ['FF', 'Ff', 'ff'])
+    super({card:3, name:name, ass:['FF', 'Ff', 'ff']})
   end
 end
 
-
 class Person
-  attr_accessor :name, :geno, :phen, :f_phen, :f_geno, 
-              :parent_1, :parent_2
+  attr_accessor :name, :geno, :phen, :f_phen, :f_geno, :parent_1, :parent_2
 
   def initialize(name)
     @name = name
     @phen = Phenotype.new(name)
     @geno = Genotype.new(name)
-    @f_phen = Factor.new([phen, geno], [0.8, 0.2, 0.6, 0.4, 0.1, 0.9])
-    @f_geno = Factor.new([geno], [0.01, 0.18, 0.81])
+    @f_phen = Factor.new({vars:[phen, geno], vals:[0.8, 0.2, 0.6, 0.4, 0.1, 0.9]})
+    @f_geno = Factor.new({vars:[geno], vals:[0.01, 0.18, 0.81]})
   end
   
   def is_son_of(parent_1, parent_2)
-    # parent_1, parent_2 = parent_1, parent_2
     na = [1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0, 0.0, 0.5, 
           0.5, 0.0, 0.25, 0.5, 0.25, 0.0, 0.5, 0.5, 0.0, 1.0, 
           0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0]
-    @f_geno = Factor.new([geno, parent_1.geno, parent_2.geno], na)
+    @f_geno = Factor.new({vars:[geno, parent_1.geno, parent_2.geno], vals:na})
   end
   
   def observe(ass, var_type)
@@ -57,7 +54,6 @@ class Person
     f = f.reduce({rv=> ass}).norm
   end
 end
-
 
 class Family
   attr_accessor :members, :clique_tree
@@ -113,8 +109,3 @@ end
 # no reductions      => P(Benito ill present) == 0.197
 # only Ira reduction => P(Benito ill present) == 0.2474593908629386
 # all reductions     => P(Benito ill present) == 0.7
-
-
-
-
-

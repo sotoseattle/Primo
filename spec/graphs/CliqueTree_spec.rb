@@ -2,14 +2,14 @@
 describe CliqueTree  do
   
   context "#initialize" do
-    let(:v1){RandomVar.new(2,"v1")}
-    let(:v2){RandomVar.new(2,"v2")}
-    let(:v3){RandomVar.new(2,"v3")}
-    let(:v4){RandomVar.new(3,"v4")}
-    let(:a){Factor.new(v1, [0.11, 0.89])}
-    let(:b){Factor.new([v2, v1], [0.59, 0.41, 0.22, 0.78])}
-    let(:c){Factor.new([v3, v2, v4], [0.25, 0.35, 0.08, 0.16, 0.05, 
-                                      0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])}
+    let(:v1){RandomVar.new({card:2, name:"v1"})}
+    let(:v2){RandomVar.new({card:2, name:"v2"})}
+    let(:v3){RandomVar.new({card:2, name:"v3"})}
+    let(:v4){RandomVar.new({card:3, name:"v4"})}
+    let(:a){Factor.new({vars:[v1], vals:[0.11, 0.89]})}
+    let(:b){Factor.new({vars:[v2, v1], vals:[0.59, 0.41, 0.22, 0.78]})}
+    let(:c){Factor.new({vars:[v3, v2, v4], vals:[0.25, 0.35, 0.08, 0.16, 0.05, 
+                                      0.07, 0, 0, 0.15, 0.21, 0.09, 0.18]})}
     subject {CliqueTree.new(a,b,c)}
     it {expect{CliqueTree.new(a,b,c)}.not_to raise_error}
     it {is_expected.to respond_to(:nodes)}
@@ -30,13 +30,13 @@ describe CliqueTree  do
       g, p = {}, {}
       ff = []
       %w{dad mom kid}.each do |name| 
-        g[:"#{name}"] = RandomVar.new(3, "#{name}_g")
-        p[:"#{name}"] = RandomVar.new(2, "#{name}_p")
-        ff << Factor.new([p[:"#{name}"], g[:"#{name}"]])
+        g[:"#{name}"] = RandomVar.new({card:3, name:"#{name}_g"})
+        p[:"#{name}"] = RandomVar.new({card:2, name:"#{name}_p"})
+        ff << Factor.new({vars:[p[:"#{name}"], g[:"#{name}"]]})
       end
-      ff << Factor.new([g[:dad]])
-      ff << Factor.new([g[:mom]])
-      ff << Factor.new([g[:kid], g[:dad], g[:mom]])
+      ff << Factor.new({vars:[g[:dad]]})
+      ff << Factor.new({vars:[g[:mom]]})
+      ff << Factor.new({vars:[g[:kid], g[:dad], g[:mom]]})
       
       ct = CliqueTree.new(*ff)
       sepsets = ct.nodes
@@ -53,21 +53,21 @@ describe CliqueTree  do
       names = %w{Robin Ira Rene James Eve Aaron Jason Benito Sandra}
       g, p = {}, {}
       names.each do |name| 
-        g[:"#{name}"] = RandomVar.new(3, "g_#{name}")
-        p[:"#{name}"] = RandomVar.new(2, "p_#{name}")
+        g[:"#{name}"] = RandomVar.new({card:3, name:"g_#{name}"})
+        p[:"#{name}"] = RandomVar.new({card:2, name:"p_#{name}"})
       end
       ff = []
       names.each do |name|
-        ff << Factor.new([p[:"#{name}"], g[:"#{name}"]])
+        ff << Factor.new({vars:[p[:"#{name}"], g[:"#{name}"]]})
       end
       %w{Robin Ira Rene Aaron}.each do |name|
-        ff << Factor.new([g[:"#{name}"]])
+        ff << Factor.new({vars:[g[:"#{name}"]]})
       end
-      ff << Factor.new([g[:James], g[:Robin], g[:Ira]])
-      ff << Factor.new([g[:Eve], g[:Robin], g[:Ira]])
-      ff << Factor.new([g[:Jason], g[:Rene], g[:James]])
-      ff << Factor.new([g[:Benito], g[:Rene], g[:James]])
-      ff << Factor.new([g[:Sandra], g[:Eve], g[:Aaron]])
+      ff << Factor.new({vars:[g[:James], g[:Robin], g[:Ira]]})
+      ff << Factor.new({vars:[g[:Eve], g[:Robin], g[:Ira]]})
+      ff << Factor.new({vars:[g[:Jason], g[:Rene], g[:James]]})
+      ff << Factor.new({vars:[g[:Benito], g[:Rene], g[:James]]})
+      ff << Factor.new({vars:[g[:Sandra], g[:Eve], g[:Aaron]]})
       
       ct = CliqueTree.new(*ff)
       sepsets = ct.nodes
@@ -77,13 +77,13 @@ describe CliqueTree  do
   
   context "#generate_tree I" do
     it "creates simple tree" do
-      v1 = RandomVar.new(2,"v1")
-      v2 = RandomVar.new(2,"v2")
-      v3 = RandomVar.new(2,"v3")
-      v4 = RandomVar.new(3,"v4")
-      a = Factor.new(v1)
-      b = Factor.new([v2, v1])
-      c = Factor.new([v3, v2, v4])
+      v1 = RandomVar.new({card:2, name:"v1"})
+      v2 = RandomVar.new({card:2, name:"v2"})
+      v3 = RandomVar.new({card:2, name:"v3"})
+      v4 = RandomVar.new({card:3, name:"v4"})
+      a = Factor.new({vars:[v1]})
+      b = Factor.new({vars:[v2, v1]})
+      c = Factor.new({vars:[v3, v2, v4]})
       ct = CliqueTree.new(a)
       sepsets = ct.send(:generate_tree,[a,b,c])
       
@@ -97,15 +97,15 @@ describe CliqueTree  do
   end
 
   context "#calibrate" do
-    let(:v1){RandomVar.new(2,"v1")}
-    let(:v2){RandomVar.new(2,"v2")}
-    let(:v3){RandomVar.new(2,"v3")}
-    let(:v4){RandomVar.new(3,"v4")}
-    let(:a){Factor.new(v1, [0.11, 0.89])}
-    let(:b){Factor.new([v2, v1], [0.59, 0.41, 0.22, 0.78])}
-    let(:c){Factor.new([v3, v2, v4], [0.25, 0.35, 0.08, 0.16, 0.05, 
-                                      0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])}
-    let(:d){Factor.new([v1, v4], [0.59, 0.41, 0.22, 0.78, 1.0, 1.0])}
+    let(:v1){RandomVar.new({card:2, name:"v1"})}
+    let(:v2){RandomVar.new({card:2, name:"v2"})}
+    let(:v3){RandomVar.new({card:2, name:"v3"})}
+    let(:v4){RandomVar.new({card:3, name:"v4"})}
+    let(:a){Factor.new({vars:[v1], vals:[0.11, 0.89]})}
+    let(:b){Factor.new({vars:[v2, v1], vals:[0.59, 0.41, 0.22, 0.78]})}
+    let(:c){Factor.new({vars:[v3, v2, v4], vals:[0.25, 0.35, 0.08, 0.16, 0.05, 
+                                      0.07, 0, 0, 0.15, 0.21, 0.09, 0.18]})}
+    let(:d){Factor.new({vars:[v1, v4], vals:[0.59, 0.41, 0.22, 0.78, 1.0, 1.0]})}
 
     subject {CliqueTree.new(a,b,c,d)}
     it "marginals from different betas/nodes give the same probability" do
