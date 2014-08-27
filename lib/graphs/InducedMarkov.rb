@@ -5,7 +5,12 @@
 
 class InducedMarkov
   include Graphium
-  include Factium
+  
+  private
+  attr_writer :factors
+  public
+  attr_reader :factors
+
 
   def initialize(*bunch_o_factors)
     @factors = Array(bunch_o_factors.flatten)

@@ -45,11 +45,24 @@ module Graphium
     n.isolate!
   end
   
+  # Remove node completely from graph
+  def delete!(node)
+    disconnect(node)
+    nodes.delete(node)
+  end
+
+  # Return nodes sorted by number of edges
+  def sort_by_edges
+    nodes.sort{|a, b| a.edges.size<=>b.edges.size}
+  end
+  def sort_by_vars
+    nodes.sort{|a, b| a.vars.size<=>b.vars.size}
+  end
+
   # Returns the node with the least edges
   # Useful for min-neighbors algorithm
   def loneliest_node
-    sorted_by_edges = nodes.sort{|a, b| a.edges.size<=>b.edges.size}
-    return sorted_by_edges.find{|n| n.edges.size>0}
+    return sort_by_edges.find{|n| n.edges.size>=0}
   end
 
   # Returns the node with the least cummulative cardinality
@@ -57,23 +70,7 @@ module Graphium
   def thinnest_node
     return nodes.min{|n1,n2| n1.weight<=>n2.weight}
   end
-
-  # Removes nodes whose variables are a subset of another node and 
-  # relinks the superset with the subset's neighbors
-  def simplify_graph
-    to_remove = []
-    nodes.each do |n|
-      n.edges.each do |neighbor|
-        if n.vars.all?{|v| neighbor.vars.include? v}
-          link_between(neighbor, n.edges)
-          n.isolate!
-          to_remove << n
-        end
-     end
-    end
-    to_remove.each{|n| nodes.delete(n)}
-  end
-
+  
   # Breadth First Search algorithm
   def breadth_first_search_path(start)
     path = []
@@ -82,10 +79,10 @@ module Graphium
     queue = [start]
     while queue.size>0
       n = queue.shift
+      path << n
       n.edges.each do |w|
         unless visited[w]
           visited[w] = true
-          path << [n,w]
           queue << w
         end
       end

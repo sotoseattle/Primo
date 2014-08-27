@@ -1,9 +1,16 @@
 require 'rubygems'
 require 'benchmark'
 
-require 'pp'
+
 require 'ap'
-require '../../CliqueTree'
+require '../../lib/factors/RandomVar'
+require '../../lib/factors/Factor'
+require '../../lib/factors/FactorArray'
+require '../../lib/graphs/Node'
+require '../../lib/graphs/Graphium'
+require '../../lib/graphs/Tree'
+require '../../lib/graphs/InducedMarkov'
+require '../../lib/graphs/CliqueTree'
 
 # CYSTIC FIBROSIS BAYESIAN NETWORK
 # computed as a whole joint probability factor of ALL variables
@@ -11,37 +18,36 @@ require '../../CliqueTree'
 
 
 class Phenotype < RandomVar
-  def initialize(id, name)
-    super(id, 2, "#{name}_ph", ['present', 'absent'])
+  def initialize(name)
+    super(2, name, ['present', 'absent'])
   end
 end
 
 class Genotype < RandomVar
-  def initialize(id, name)
-    super(id, 3, "#{name}_gn", ['FF', 'Ff', 'ff'])
+  def initialize(name)
+    super(3, name, ['FF', 'Ff', 'ff'])
   end
 end
 
 
 class Person
-  attr_reader :id, :name, :genotype, :phenotype, :f_phenotype, :f_genotype, :parent_1, :parent_2
+  attr_accessor :name, :geno, :phen, :f_phen, :f_geno, 
+              :parent_1, :parent_2
 
-  # <============= REFACTOR the ID (fugly, there has to be another way)
-
-  def initialize(id, name)
+  def initialize(name)
     @name = name
-    @phenotype = Phenotype.new(id, name)
-    @genotype = Genotype.new(id+1, name)
-    @f_phenotype = Factor.new([@phenotype, @genotype], [0.8, 0.2, 0.6, 0.4, 0.1, 0.9])
-    @f_genotype = Factor.new([@genotype], [0.01, 0.18, 0.81])
+    @phen = Phenotype.new(name)
+    @geno = Genotype.new(name)
+    @f_phen = Factor.new([phen, geno], [0.8, 0.2, 0.6, 0.4, 0.1, 0.9])
+    @f_geno = Factor.new([geno], [0.01, 0.18, 0.81])
   end
   
   def is_son_of(parent_1, parent_2)
-    @parent_1, @parent_2 = parent_1, parent_2
+    # parent_1, parent_2 = parent_1, parent_2
     na = [1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0, 0.0, 0.5, 
           0.5, 0.0, 0.25, 0.5, 0.25, 0.0, 0.5, 0.5, 0.0, 1.0, 
           0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0]
-    @f_genotype = Factor.new([@genotype, @parent_1.genotype, @parent_2.genotype], na)
+    @f_geno = Factor.new([geno, parent_1.geno, parent_2.geno], na)
   end
   
   def observe(ass, var_type)
@@ -51,34 +57,37 @@ class Person
   end
 end
 
+
 class Family
-  attr_reader :members, :clique_tree
+  attr_accessor :members, :clique_tree
 
   def initialize(names)
     @clique_tree = nil
-    @members = []
-    i = 0
-    names.each do |name|
-      @members << Person.new(i, name)
-      i +=2
-    end
+    @members = names.map{|name| Person.new(name)}
   end
   
   def [](name)
-    @members.find{|p| p.name==name}
+    members.find{|p| p.name==name}
   end
 
   def setup
-    all_factors = @members.map{|p| [p.f_phenotype, p.f_genotype]}.flatten
-    @clique_tree = CliqueTree.new(all_factors)
-    @clique_tree.calibrate()
+    all_factors = members.map{|p| [p.f_phen, p.f_geno]}.flatten
+
+    self.clique_tree = CliqueTree.new(*all_factors)
+    clique_tree.calibrate
   end
 
   def query(name, var_type)
     rv = self[name].instance_variable_get("@#{var_type}")
-    b = @clique_tree.betas.find{|b| b.vars.include?(rv)}
-    b.marginalize_all_but(rv)
-    b = b.norm.vals.to_a
+    # b = clique_tree.betas.find{|b| b.vars.include?(rv)}
+
+    node_w_rv = clique_tree.nodes.find{|n| n.vars.include?(rv)}
+    my_beta = node_w_rv.bag[:beta]
+    my_beta.marginalize_all_but(rv)
+    b = my_beta.norm.vals.to_a
+
+    # b.marginalize_all_but(rv)
+    # b = b.norm.vals.to_a
     sol = {}
     rv.card.times do |i|
       sol[rv.ass[i]]=b[i]
@@ -103,14 +112,14 @@ a['Benito'].is_son_of(a['James'], a['Rene'])
 #a['Juan'].is_son_of(a['Aaron'], a['Eva'])
 #a['Margarita'].is_son_of(a['Juan'], a['Pepe'])
 
-a['Ira'].observe('present', 'phenotype')
-a['James'].observe('Ff', 'genotype')
-a['Rene'].observe('FF', 'genotype')
+a['Ira'].observe('present', 'phen')
+a['James'].observe('Ff', 'geno')
+a['Rene'].observe('FF', 'geno')
 
 a.setup()
 
 %w{Ira Robin Aaron Rene James Eva Sandra Jason Benito}.each do |name|
-  q = a.query(name, 'phenotype')
+  q = a.query(name, 'phen')
   puts "#{name} p(showing illness) = #{100*q['present']}%"
 end
 

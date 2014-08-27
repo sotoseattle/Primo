@@ -55,6 +55,18 @@ describe "Graphium Role" do
     end
   end
 
+  context "#sort_by_edges" do
+    it "returns nodes from least to most connected" do
+      n2 = subject.add_node(v2)
+      n3 = subject.add_node(v3)
+      n1 = subject.add_node(v1)
+      n4 = subject.add_node(v4)
+      subject.add_edges(n1,n2)
+      subject.make_clique(n2,n3,n4)
+      expect(subject.sort_by_edges.first).to eq(n1)
+    end
+  end
+
   context "#loneliest_node" do
     it "returns the node with least connected nodes" do
       n2 = subject.add_node(v2)
@@ -73,12 +85,12 @@ describe "Graphium Role" do
       subject.add_edges(n2,n3)
       expect(subject.loneliest_node).to eq(n1)
     end
-    it "ignores unlinked nodes if it exists" do
+    it "does not ignores unlinked nodes if they exists" do
       n1 = subject.add_node(v1)
       n2 = subject.add_node(v2)
       n3 = subject.add_node(v3)
       subject.add_edges(n2,n3)
-      expect(subject.loneliest_node).not_to eq(n1)
+      expect(subject.loneliest_node).to eq(n1)
     end
   end
 
@@ -120,7 +132,7 @@ describe "Graphium Role" do
     end
   end
 
-  context "#simplify_graph" do
+  context "#prune_tree" do
     context "when in terms of variables, no node is a subset of another" do
       it "does nothing" do
         n1 = subject.add_node(v1)
@@ -129,7 +141,7 @@ describe "Graphium Role" do
         subject.add_edges(n1,n2)
         subject.add_edges(n2,n3)
         
-        expect {subject.simplify_graph}.not_to change {subject.nodes.size}
+        expect {subject.prune_tree}.not_to change {subject.nodes.size}
       end
     end
     context "when a node's variables are a subset of another node" do
@@ -139,7 +151,7 @@ describe "Graphium Role" do
         n3 = subject.add_node(v4)
         subject.add_edges(n1,n2)
         subject.add_edges(n2,n3)
-        expect{subject.simplify_graph}.to change{subject.nodes.size}.by(-1)
+        expect{subject.prune_tree}.to change{subject.nodes.size}.by(-1)
         expect(subject.nodes.first.vars.size).to eq(3)
         expect(subject.nodes.first.vars).to include(v1,v2,v3)
         expect(subject.nodes.last.vars.size).to eq(1)
@@ -151,7 +163,7 @@ describe "Graphium Role" do
         n3 = subject.add_node(v3)
         subject.add_edges(n1,n2)
         subject.add_edges(n2,n3)
-        expect{subject.simplify_graph}.to change{subject.nodes.size}.by(-2)
+        expect{subject.prune_tree}.to change{subject.nodes.size}.by(-2)
         expect(subject.nodes.first.vars.size).to eq(3)
         expect(subject.nodes.first.vars).to include(v1,v2,v3)
       end
@@ -164,7 +176,7 @@ describe "Graphium Role" do
         subject.add_edges(n1,n3)
         subject.add_edges(n2,n4)
         subject.add_edges(n3,n4)
-        expect{subject.simplify_graph}.to change{subject.nodes.size}.by(-2)
+        expect{subject.prune_tree}.to change{subject.nodes.size}.by(-2)
         expect(subject.nodes.first.vars.size).to eq(3)
         expect(subject.nodes.first.vars).to include(v1,v2,v3)
         expect(subject.nodes.last.vars.size).to eq(1)
@@ -195,27 +207,19 @@ describe "Graphium Role" do
   # end
 
   context "#breadth_first_search_path" do
-    # Algorithms by Sedgewick example on page 539
     context "returns an ordered path that visits all nodes" do
       let(:g){subject}
-      let(:path) {g.breadth_first_search_path(g.nodes[0])}
+      let(:path) {g.breadth_first_search_path(g.nodes[4])}
       before do
         (0...6).each{|i| g.add_node(RandomVar.new(2, "v#{i}"))}
         g.link_between(g.nodes[0], [g.nodes[1],g.nodes[2],g.nodes[5]])
-        g.add_edges(g.nodes[1],g.nodes[2])
-        g.link_between(g.nodes[3], [g.nodes[2],g.nodes[4],g.nodes[5]])
-        g.add_edges(g.nodes[2],g.nodes[4])
+        g.link_between(g.nodes[2], [g.nodes[3],g.nodes[4]])
       end
-      it "has minimum number of steps to travel the graph" do
-        expect(path.size).to eq(5)
-      end
-    
-      it "every step is an array of nodes with [origin, destination]" do
-        expect(path[0]).to eq([g.nodes[0],g.nodes[1]])
-        expect(path[1]).to eq([g.nodes[0],g.nodes[2]])
-        expect(path[2]).to eq([g.nodes[0],g.nodes[5]])
-        expect(path[3]).to eq([g.nodes[2],g.nodes[3]])
-        expect(path[4]).to eq([g.nodes[2],g.nodes[4]])
+      it "visits all nodes of the graph" do
+        expect(path.size).to eq(6)
+      end    
+      it "ordered in visiting order" do
+        expect(path).to eq([4,2,0,3,1,5].map{|i| g.nodes[i]})
       end
     end
   end

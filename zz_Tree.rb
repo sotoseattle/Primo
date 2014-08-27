@@ -13,33 +13,33 @@ class TreeGenerator ### WORK ON THIS
  #    end
  #  end
 
- #  def keep_prunning?
- #    # Start with a node (A), scan through its neighbors to find one that is
- #    # a superset of variables (B). Add edges between B and all of A's other
- #    # neighbors and cut off all edges from A
- #    nodes_idx = nodes.each_index.select{|i| !nodes[i].empty?}
- #    nodes_filled = nodes_idx.size
- #    nodes_idx.each do |i|
- #      edges[i].each do |j|
- #        if nodes[i].subset?(nodes[j])
- #          # connect nodeB to other nodeA's neighbors
- #          edges[i].each{|e| self.add_edge(j,e)}
- #          # erase all info from pruned node
- #          edges[i] = []     # <====== Maybe we dont need both cleared before reindexing
- #          nodes[i].clear    # <====== Maybe we dont need both cleared before reindexing
- #          nodes_filled -= 1
- #          # remove all reference of pruned node in other node's links
- #          edges.each_with_index do |neighbors, k|
- #            if neighbors.include?(i)
- #              edges[k].delete(i)
- #            end
- #          end
- #          return nodes_filled>2
- #        end
- #      end
- #    end
- #    return false
- #  end
+  # def keep_prunning?
+  #   # Start with a node (A), scan through its neighbors to find one that is
+  #   # a superset of variables (B). Add edges between B and all of A's other
+  #   # neighbors and cut off all edges from A
+  #   nodes_idx = nodes.each_index.select{|i| !nodes[i].empty?}
+  #   nodes_filled = nodes_idx.size
+  #   nodes_idx.each do |i|
+  #     edges[i].each do |j|
+  #       if nodes[i].subset?(nodes[j])
+  #         # connect nodeB to other nodeA's neighbors
+  #         edges[i].each{|e| self.add_edge(j,e)}
+  #         # erase all info from pruned node
+  #         edges[i] = []     # <====== Maybe we dont need both cleared before reindexing
+  #         nodes[i].clear    # <====== Maybe we dont need both cleared before reindexing
+  #         nodes_filled -= 1
+  #         # remove all reference of pruned node in other node's links
+  #         edges.each_with_index do |neighbors, k|
+  #           if neighbors.include?(i)
+  #             edges[k].delete(i)
+  #           end
+  #         end
+  #         return nodes_filled>2
+  #       end
+  #     end
+  #   end
+  #   return false
+  # end
 
  #  def reindex_tree
  #    dict = {}

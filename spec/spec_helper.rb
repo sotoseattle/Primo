@@ -4,7 +4,7 @@ require 'awesome_print'
 # factor based
 require_relative '../lib/factors/RandomVar'     # Class
 require_relative '../lib/factors/Factor'        # Class
-require_relative '../lib/factors/Factium'       # Module
+require_relative '../lib/factors/FactorArray'   # Class
 
 # graph based
 require_relative '../lib/graphs/Node'           # Class
