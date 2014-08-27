@@ -1,7 +1,7 @@
 # Role of Tree, additional methods for an specific graph.
 
 module Tree
-  include Graphium
+  include Graph
 
   # Returns a leaf in a tree
   def leaf

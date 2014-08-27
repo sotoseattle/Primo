@@ -3,7 +3,7 @@
 # although it manages the edges between nodes, it is the node itself
 # the one who knows who he is linked to and actually creates the edge.
 
-module Graphium
+module Graph
   private
   attr_writer :nodes
   public

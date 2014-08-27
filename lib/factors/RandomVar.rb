@@ -14,8 +14,12 @@ class RandomVar
     self.object_id <=> other.object_id
   end
 
+  def [](assignment)
+    return ass.index(assignment)
+  end
+
   def to_s
-    "#{name}"
+    return "#{name}"
   end
 
 end

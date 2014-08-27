@@ -7,7 +7,8 @@ require '../../lib/factors/RandomVar'
 require '../../lib/factors/Factor'
 require '../../lib/factors/FactorArray'
 require '../../lib/graphs/Node'
-require '../../lib/graphs/Graphium'
+require '../../lib/graphs/Messenger'
+require '../../lib/graphs/Graph'
 require '../../lib/graphs/Tree'
 require '../../lib/graphs/InducedMarkov'
 require '../../lib/graphs/CliqueTree'
@@ -72,27 +73,13 @@ class Family
 
   def setup
     all_factors = members.map{|p| [p.f_phen, p.f_geno]}.flatten
-
     self.clique_tree = CliqueTree.new(*all_factors)
     clique_tree.calibrate
   end
 
-  def query(name, var_type)
-    rv = self[name].instance_variable_get("@#{var_type}")
-    # b = clique_tree.betas.find{|b| b.vars.include?(rv)}
-
-    node_w_rv = clique_tree.nodes.find{|n| n.vars.include?(rv)}
-    my_beta = node_w_rv.bag[:beta]
-    my_beta.marginalize_all_but(rv)
-    b = my_beta.norm.vals.to_a
-
-    # b.marginalize_all_but(rv)
-    # b = b.norm.vals.to_a
-    sol = {}
-    rv.card.times do |i|
-      sol[rv.ass[i]]=b[i]
-    end
-    return sol
+  def prob_sick(name)
+    rv = self[name].phen
+    return 100*clique_tree.query(rv, 'present')
   end
 end
 
@@ -119,8 +106,7 @@ a['Rene'].observe('FF', 'geno')
 a.setup()
 
 %w{Ira Robin Aaron Rene James Eva Sandra Jason Benito}.each do |name|
-  q = a.query(name, 'phen')
-  puts "#{name} p(showing illness) = #{100*q['present']}%"
+  puts "#{name} p(showing illness) = #{a.prob_sick(name)}%"
 end
 
 

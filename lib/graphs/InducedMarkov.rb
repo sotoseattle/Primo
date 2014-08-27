@@ -4,7 +4,7 @@
 # in a factor.
 
 class InducedMarkov
-  include Graphium
+  include Graph
   
   private
   attr_writer :factors
