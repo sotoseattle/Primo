@@ -41,7 +41,7 @@ describe CliqueTree  do
       ct = CliqueTree.new(*ff)
       sepsets = ct.nodes
       expect(sepsets.size).to eq(4)
-      expect(sepsets.last.edges).to include(sepsets[0],sepsets[1],sepsets[2])
+      expect(sepsets.last.neighbors).to include(sepsets[0],sepsets[1],sepsets[2])
       sepsets.each do |sepset|
         expect(sepset.bag[:phi].class).to eq(Factor)
         expect(sepset.bag[:phi].vars.sort).to eq(sepset.vars.sort)
@@ -90,9 +90,9 @@ describe CliqueTree  do
       expect(sepsets[0].vars).to include(v2,v1)
       expect(sepsets[1].vars).to include(v2,v3,v4)
       expect(sepsets[2].vars).to include(v3,v4)
-      expect(sepsets[0].edges).to include(sepsets[1])
-      expect(sepsets[1].edges).to include(sepsets[0], sepsets[2])
-      expect(sepsets[2].edges).to include(sepsets[1])
+      expect(sepsets[0].neighbors).to include(sepsets[1])
+      expect(sepsets[1].neighbors).to include(sepsets[0], sepsets[2])
+      expect(sepsets[2].neighbors).to include(sepsets[1])
     end
   end
 

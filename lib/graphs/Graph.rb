@@ -20,27 +20,27 @@ module Graph
   end
 
   # Connect with edge two nodes, or multiple nodes as a clique
-  def add_edges(*bunch_o_nodes)
+  def add_neighbors(*bunch_o_nodes)
     Array(bunch_o_nodes.flatten).combination(2).each do |node_pair|
       node_pair[0].connect(node_pair[1])
     end
   end
-  alias_method :make_clique, :add_edges
+  alias_method :make_clique, :add_neighbors
 
   # Connect node to a bunch of others (but not among themselves)
   def link_between(node, *bunch_o_nodes)
     Array(bunch_o_nodes.flatten).each do |n|
-      add_edges(node, n)
+      add_neighbors(node, n)
     end
   end
 
   # Make a clique of all nodes that share a certain variable
   def link_all_with(v)
     clique = nodes.select{|n| n.vars.include?(v)}
-    add_edges(clique)
+    add_neighbors(clique)
   end
 
-  # Ask node to remove all its edges
+  # Ask node to remove all its neighbors
   def disconnect(n)
     n.isolate!
   end
@@ -51,18 +51,18 @@ module Graph
     nodes.delete(node)
   end
 
-  # Return nodes sorted by number of edges
-  def sort_by_edges
-    nodes.sort{|a, b| a.edges.size<=>b.edges.size}
+  # Return nodes sorted by number of neighbors
+  def sort_by_neighbors
+    nodes.sort{|a, b| a.neighbors.size<=>b.neighbors.size}
   end
   def sort_by_vars
     nodes.sort{|a, b| a.vars.size<=>b.vars.size}
   end
 
-  # Returns the node with the least edges
+  # Returns the node with the least neighbors
   # Useful for min-neighbors algorithm
   def loneliest_node
-    return sort_by_edges.find{|n| n.edges.size>=0}
+    return sort_by_neighbors.find{|n| n.neighbors.size>=0}
   end
 
   # Returns the node with the least cummulative cardinality
@@ -80,7 +80,7 @@ module Graph
     while queue.size>0
       n = queue.shift
       path << n
-      n.edges.each do |w|
+      n.neighbors.each do |w|
         unless visited[w]
           visited[w] = true
           queue << w
@@ -99,7 +99,7 @@ module Graph
   def to_s
     s = "#{nodes.size} nodes\n"
     nodes.each do |n|
-      s << " #{n}: #{n.edges.join(' || ')}\n"
+      s << " #{n}: #{n.neighbors.join(' || ')}\n"
     end
     return s
   end

@@ -37,15 +37,15 @@ describe InducedMarkov do
         expect(h.keys.uniq.size).to eq(4)
       end
       it "two nodes connect if their vars were together in an input factor" do
-        expect(h[v1].edges).to include(h[v2])
-        expect(h[v2].edges).to include(h[v1])
+        expect(h[v1].neighbors).to include(h[v2])
+        expect(h[v2].neighbors).to include(h[v1])
 
-        expect(h[v2].edges).to include(h[v3])
-        expect(h[v2].edges).to include(h[v4])
-        expect(h[v3].edges).to include(h[v2])
-        expect(h[v3].edges).to include(h[v4])
-        expect(h[v4].edges).to include(h[v2])
-        expect(h[v4].edges).to include(h[v3])
+        expect(h[v2].neighbors).to include(h[v3])
+        expect(h[v2].neighbors).to include(h[v4])
+        expect(h[v3].neighbors).to include(h[v2])
+        expect(h[v3].neighbors).to include(h[v4])
+        expect(h[v4].neighbors).to include(h[v2])
+        expect(h[v4].neighbors).to include(h[v3])
       end
     end
   end

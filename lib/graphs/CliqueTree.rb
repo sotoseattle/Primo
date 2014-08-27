@@ -90,7 +90,7 @@ class CliqueTree
   # Gather incomming messages to the node
   # Optional, disregard messages from the node we may transmit to
   def incomming_messages(n, silent_node=nil)
-    transmitters = n.edges.reject{|e| e==silent_node}
+    transmitters = n.neighbors.reject{|e| e==silent_node}
     messages = transmitters.map{|m| n.get_message_from(m)}
     return messages
   end

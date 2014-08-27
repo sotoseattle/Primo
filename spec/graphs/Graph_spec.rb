@@ -27,43 +27,43 @@ describe "Graph Role" do
     end
   end
 
-  context "#add_edges" do
+  context "#add_neighbors" do
     it "creates edges between two nodes" do
-      subject.add_edges(n1, n2)
-      expect(n1.edges).to include(n2)
-      expect(n2.edges).to include(n1)
+      subject.add_neighbors(n1, n2)
+      expect(n1.neighbors).to include(n2)
+      expect(n2.neighbors).to include(n1)
     end
 
     it {is_expected.to respond_to(:make_clique)}
 
     it "admits nodes inside array" do
       n4 = subject.add_node(v4)
-      subject.add_edges([n1, n2, n3, n4])
+      subject.add_neighbors([n1, n2, n3, n4])
       [n1, n2, n3, n4].each do |n|
-        expect(n.edges.size).to eq(3)
+        expect(n.neighbors.size).to eq(3)
       end
     end
 
     it "creates all edges possible among all nodes passed" do
-      subject.add_edges(n1, n2, n3)
-      expect(n1.edges).to include(n2)
-      expect(n1.edges).to include(n3)
-      expect(n2.edges).to include(n1)
-      expect(n2.edges).to include(n3)
-      expect(n3.edges).to include(n1)
-      expect(n3.edges).to include(n2)
+      subject.add_neighbors(n1, n2, n3)
+      expect(n1.neighbors).to include(n2)
+      expect(n1.neighbors).to include(n3)
+      expect(n2.neighbors).to include(n1)
+      expect(n2.neighbors).to include(n3)
+      expect(n3.neighbors).to include(n1)
+      expect(n3.neighbors).to include(n2)
     end
   end
 
-  context "#sort_by_edges" do
+  context "#sort_by_neighbors" do
     it "returns nodes from least to most connected" do
       n2 = subject.add_node(v2)
       n3 = subject.add_node(v3)
       n1 = subject.add_node(v1)
       n4 = subject.add_node(v4)
-      subject.add_edges(n1,n2)
+      subject.add_neighbors(n1,n2)
       subject.make_clique(n2,n3,n4)
-      expect(subject.sort_by_edges.first).to eq(n1)
+      expect(subject.sort_by_neighbors.first).to eq(n1)
     end
   end
 
@@ -73,7 +73,7 @@ describe "Graph Role" do
       n3 = subject.add_node(v3)
       n1 = subject.add_node(v1)
       n4 = subject.add_node(v4)
-      subject.add_edges(n1,n2)
+      subject.add_neighbors(n1,n2)
       subject.make_clique(n2,n3,n4)
       expect(subject.loneliest_node).to eq(n1)
     end
@@ -81,15 +81,15 @@ describe "Graph Role" do
       n2 = subject.add_node(v2)
       n3 = subject.add_node(v3)
       n1 = subject.add_node(v1)
-      subject.add_edges(n1,n2)
-      subject.add_edges(n2,n3)
+      subject.add_neighbors(n1,n2)
+      subject.add_neighbors(n2,n3)
       expect(subject.loneliest_node).to eq(n1)
     end
     it "does not ignores unlinked nodes if they exists" do
       n1 = subject.add_node(v1)
       n2 = subject.add_node(v2)
       n3 = subject.add_node(v3)
-      subject.add_edges(n2,n3)
+      subject.add_neighbors(n2,n3)
       expect(subject.loneliest_node).to eq(n1)
     end
   end
@@ -110,25 +110,25 @@ describe "Graph Role" do
       n4 = subject.add_node(v4)
 
       subject.link_all_with(v2)
-      expect(n1.edges).to include(n2)
-      expect(n1.edges).to include(n3)
-      expect(n3.edges).to include(n1)
-      expect(n1.edges).not_to include(n4)
-      expect(n4.edges).to be_empty
+      expect(n1.neighbors).to include(n2)
+      expect(n1.neighbors).to include(n3)
+      expect(n3.neighbors).to include(n1)
+      expect(n1.neighbors).not_to include(n4)
+      expect(n4.neighbors).to be_empty
     end
   end
 
   context "#disconnect" do
     # see spec for Node for better test
-    it "removes all edges from a node" do
+    it "removes all neighbors from a node" do
       n1 = subject.add_node(v1)
       n2 = subject.add_node(v2)
       n3 = subject.add_node(v3)
-      subject.add_edges(n1,n2)
-      subject.add_edges(n2,n3)
+      subject.add_neighbors(n1,n2)
+      subject.add_neighbors(n2,n3)
 
       subject.disconnect(n2)
-      expect(n2.edges).to be_empty
+      expect(n2.neighbors).to be_empty
     end
   end
 

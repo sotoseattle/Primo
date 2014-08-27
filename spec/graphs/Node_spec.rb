@@ -12,9 +12,9 @@ describe Node  do
     context "with proper variables" do
       subject {Node.new(v1, v2, v2)}
       it {is_expected.to respond_to(:vars)}
-      it {is_expected.to respond_to(:edges)}
+      it {is_expected.to respond_to(:neighbors)}
       it {expect(subject.vars.size).to eq(2)}
-      its(:edges) {should be_empty}
+      its(:neighbors) {should be_empty}
     end
     context "with array of variables" do
       it {expect{Node.new([v1, v2, v2])}.not_to raise_error}
@@ -26,23 +26,23 @@ describe Node  do
     let(:n2){Node.new(v1, v3)}
     let(:n3){Node.new(v4)}
 
-    it "should increment the edges array" do
-      expect {n1.connect(n2)}.to change {n1.edges.size}.by(1)
+    it "should increment the neighbors array" do
+      expect {n1.connect(n2)}.to change {n1.neighbors.size}.by(1)
     end
-    it "should add the node to edges array" do
+    it "should add the node to neighbors array" do
       n1.connect(n2)
-      expect(n1.edges).to include n2
+      expect(n1.neighbors).to include n2
     end
-    it "should add itself to the connected node's edges" do
+    it "should add itself to the connected node's neighbors" do
       n1.connect(n2)
-      expect(n2.edges).to include n1
+      expect(n2.neighbors).to include n1
     end
     it "should not connect if already connected" do
       n1.connect(n2)
-      expect {n1.connect(n2)}.not_to change {n1.edges.size}
+      expect {n1.connect(n2)}.not_to change {n1.neighbors.size}
     end
     it "should not connect to itself" do
-      expect {n1.connect(n1)}.not_to change {n1.edges.size}
+      expect {n1.connect(n1)}.not_to change {n1.neighbors.size}
     end
   end
 
@@ -51,20 +51,20 @@ describe Node  do
     let(:n2){Node.new(v1, v3)}
     let(:n3){Node.new(v4)}
 
-    it "removes all edges" do
+    it "removes all neighbors" do
       n1.connect(n2)
       n1.connect(n3)
-      expect {n1.isolate!}.to change {n1.edges.size}.by(-2)
-      expect(n1.edges).to be_empty
+      expect {n1.isolate!}.to change {n1.neighbors.size}.by(-2)
+      expect(n1.neighbors).to be_empty
     end
-    it "remove itself from the edges of its previously connected nodes" do
+    it "remove itself from the neighbors of its previously connected nodes" do
       n1.connect(n2)
       n1.connect(n3)
       n2.connect(n3)
       n1.isolate!
-      expect(n2.edges).not_to include(n1)
-      expect(n3.edges).not_to include(n1)
-      expect(n3.edges).to include(n2)
+      expect(n2.neighbors).not_to include(n1)
+      expect(n3.neighbors).not_to include(n1)
+      expect(n3.neighbors).to include(n2)
     end
 
   end

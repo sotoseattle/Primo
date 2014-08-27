@@ -5,7 +5,7 @@ module Tree
 
   # Returns a leaf in a tree
   def leaf
-    return nodes.first{|n| n.edges.size==1}
+    return nodes.first{|n| n.neighbors.size==1}
   end
 
   # Removes nodes whose variables are a subset of another node and 
@@ -14,12 +14,10 @@ module Tree
     go_on = true
     while go_on
       go_on = false
-      # sort_by_vars.each do |n|
       nodes.each do |n|
-        # kk = n.edges.sort{|a, b| a.vars.size<=>b.vars.size}.reverse
-        neighbor = n.edges.find{|m| (n.vars - m.vars).empty?}
+        neighbor = n.neighbors.find{|m| (n.vars - m.vars).empty?}
         if neighbor
-          link_between(neighbor, n.edges)
+          link_between(neighbor, n.neighbors)
           delete!(n)
           go_on = true
           break
@@ -35,7 +33,7 @@ module Tree
     marked = Hash.new(false)
     path = discovery_bfs_path.reverse.map do |from|
       marked[from] = true
-      to = from.edges.find{|n| marked[n]==false}
+      to = from.neighbors.find{|n| marked[n]==false}
       [from,to]
     end
     path.pop
