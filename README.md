@@ -1,4 +1,4 @@
-GRIM
+GRIMOIRE
 ====
 
 ###Graphical Inference Modelling with Ruby

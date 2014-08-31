@@ -1,16 +1,4 @@
-require 'rubygems'
-require 'benchmark'
-
-
-# require 'ap'
-require_relative '../../lib/factors/Factor'
-require_relative '../../lib/factors/FactorArray'
-require_relative '../../lib/graphs/Node'
-require_relative '../../lib/graphs/Messenger'
-require_relative '../../lib/graphs/Graph'
-require_relative '../../lib/graphs/Tree'
-require_relative '../../lib/graphs/InducedMarkov'
-require_relative '../../lib/graphs/CliqueTree'
+require_relative '../../lib/grimoire'
 
 # CYSTIC FIBROSIS BAYESIAN NETWORK
 # computed as a whole joint probability factor of ALL variables

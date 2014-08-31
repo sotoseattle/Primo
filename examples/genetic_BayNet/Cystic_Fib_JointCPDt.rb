@@ -2,10 +2,7 @@
 # computed as a whole joint probability factor of ALL variables
 # very brutish and primitive but helps test and benchmark factor operations
 
-require 'rubygems'
-require 'pp'
-
-require_relative '../../lib/factors/Factor'
+require_relative '../../lib/grimoire'
 
 class Phenotype < RandomVar
   def initialize(name)
