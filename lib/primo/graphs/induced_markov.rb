@@ -1,20 +1,21 @@
 # Induced Markov Network is an undirected graph where each node holds a
 # single random variable. It can be created from a set of factors where
-# two nodes become connected if the variables they hold show up together 
+# two nodes become connected if the variables they hold show up together
 # in a factor.
-
 class InducedMarkov
   include Graph
-  
-  private
-  attr_writer :factors
-  public
-  attr_reader :factors
 
+  private
+
+  attr_writer :factors
+
+  public
+
+  attr_reader :factors
 
   def initialize(*bunch_o_factors)
     @factors = Array(bunch_o_factors.flatten)
-    raise ArgumentError.new if factors.empty?
+    fail ArgumentError.new if factors.empty?
     h = {}
     factors.each do |f|
       to_connect = []
@@ -25,5 +26,4 @@ class InducedMarkov
       make_clique(to_connect)
     end
   end
-
 end

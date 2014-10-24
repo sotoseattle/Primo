@@ -1,4 +1,3 @@
-
 class CliqueTree
   include Tree
 
@@ -11,20 +10,20 @@ class CliqueTree
   end
 
   def calibrate
-    message_path.each{|step| compute_message(*step)}
-    nodes.each{|n| compute_belief(n)}
+    message_path.each { |step| compute_message(*step) }
+    nodes.each { |n| compute_belief(n) }
   end
 
   # Returns probability of variable assignment on calibrated tree
-  def query(variable, assignment=nil)
-    n = nodes.find{|n| n.vars.include?(variable)}
+  def query(variable, assignment = nil)
+    n = nodes.find { |n| n.vars.include?(variable) }
     my_beta = n.bag[:beta].clone.marginalize_all_but(variable)
     b = my_beta.norm.vals.to_a
     if assignment
       return b[variable[assignment]]
     else
       return b
-    end    
+    end
   end
 
   private
@@ -36,11 +35,11 @@ class CliqueTree
     workip = FactorArray.new(factors_array)
     markov = InducedMarkov.new(factors_array)
     tau = nil
-    while markov.nodes.size>0
+    while markov.nodes.size > 0
       pick_node = markov.loneliest_node
       pick_var  = pick_node.vars[0]
-      factors_with_pick = workip.select{|f| f.holds?(pick_var)}
-      
+      factors_with_pick = workip.select { |f| f.holds?(pick_var) }
+
       if tau = workip.eliminate_variable!(pick_var)
         # tree: new nodes
         new_vars = tau.vars + [pick_var]
@@ -48,24 +47,24 @@ class CliqueTree
         new_node.extend(Messenger)
         tree_nodes << new_node
         # tree: new edges
-        clique = tree_nodes.select{|n| factors_with_pick.include? n.bag[:tau]}
+        clique = tree_nodes.select { |n| factors_with_pick.include? n.bag[:tau] }
         link_between(new_node, clique)
 
         # store the tau in its node
         new_node.bag[:tau] = tau
         # modify induced markov for next iteration
-        tau.vars.each{|v| markov.link_all_with(v)}
+        tau.vars.each { |v| markov.link_all_with(v) }
         markov.delete!(pick_node)
       end
     end
-    tau.vars.each{|v| markov.link_all_with(v)}
-    return tree_nodes
+    tau.vars.each { |v| markov.link_all_with(v) }
+    tree_nodes
   end
-  
+
   def setup_working_variables
     nodes.each do |n|
       n.bag.delete(:tau)
-      n.bag[:phi] = (Factor.new({vars:n.vars}) + 1).norm
+      n.bag[:phi] = (Factor.new(vars: n.vars) + 1).norm
       n.bag[:beta] = nil
     end
   end
@@ -73,7 +72,7 @@ class CliqueTree
   # Associate to each node the product of factors that share variables
   def initialize_potentials(factors_array)
     factors_array.each do |f|
-      nn = sort_by_vars.find{|n| (f.vars-n.vars).empty?}
+      nn = sort_by_vars.find { |n| (f.vars - n.vars).empty? }
       nn.bag[:phi] *= f
       nn.bag[:phi].norm
     end
@@ -83,16 +82,16 @@ class CliqueTree
   # Traversing the tree both ways. Each step = [from_node, to_node]
   def message_path
     forwards = cascade_path
-    backwards = forwards.reverse.map{|a| a.reverse}
-    return (forwards + backwards)
+    backwards = forwards.reverse.map(&:reverse)
+    (forwards + backwards)
   end
 
   # Gather incomming messages to the node
   # Optional, disregard messages from the node we may transmit to
-  def incomming_messages(n, silent_node=nil)
-    transmitters = n.neighbors.reject{|e| e==silent_node}
-    messages = transmitters.map{|m| n.get_message_from(m)}
-    return messages
+  def incomming_messages(n, silent_node = nil)
+    transmitters = n.neighbors.reject { |e| e == silent_node }
+    messages = transmitters.map { |m| n.get_message_from(m) }
+    messages
   end
 
   # Compute delta message as cumproduct of potential and incoming messages
@@ -100,7 +99,7 @@ class CliqueTree
     delta = [origin.bag[:phi]] + incomming_messages(origin, target)
     delta = FactorArray.new(delta).product(true)
     setsep_vars = (origin.vars & target.vars)
-    (delta.vars - setsep_vars).each{|v| delta % v}
+    (delta.vars - setsep_vars).each { |v| delta % v }
     target.save_message_from(origin, delta)
   end
 
@@ -109,9 +108,4 @@ class CliqueTree
     beta = [n.bag[:phi]] + incomming_messages(n)
     n.bag[:beta] = FactorArray.new(beta).product(true)
   end
-
-  
-  
-
-
 end

@@ -4,19 +4,18 @@ require_relative './Factor'
 # Holds utility methods and algorithms applicable to sets of factors.
 
 class FactorArray < Array
-  
   # Returns the reduction by multiplication with optional normalization
-  def product(normalize=true)
+  def product(normalize = true)
     f0 = first.to_ones
-    self.each do |f|
-      f0*f
+    each do |f|
+      f0 * f
       f0.norm if normalize
     end
-    return f0
+    f0
   end
 
   def all_vars
-    map{|f| f.vars}.flatten
+    map(&:vars).flatten
   end
 
   # Variable Elimination Algorithm: modifies factors in place and returns tau
@@ -25,7 +24,7 @@ class FactorArray < Array
     delete_if do |f|
       if f.holds?(v)
         if tau
-          (tau*f).norm
+          (tau * f).norm
         else
           tau = f
         end
@@ -33,9 +32,8 @@ class FactorArray < Array
     end
     if tau
       tau % v
-      self.push(tau)
+      push(tau)
     end
-    return tau
+    tau
   end
-
 end
