@@ -1,26 +1,24 @@
 class RandomVar
-
   attr_reader :card, :ass, :name
 
   def initialize(args)
-    args.merge({name:'', ass:nil})
+    args.merge(name: '', ass: nil)
     @card = args[:card].to_i
     @name = args[:name].to_s
     @ass = (args[:ass] ? Array(args[:ass]) : (0...@card).to_a)
-    raise ArgumentError.new if @card==0
-    raise ArgumentError.new if @ass.size!=@card
+    fail ArgumentError.new if @card == 0
+    fail ArgumentError.new if @ass.size != @card
   end
 
   def <=>(other)
-    self.object_id <=> other.object_id
+    object_id <=> other.object_id
   end
 
   def [](assignment)
-    return ass.index(assignment)
+    ass.index(assignment)
   end
 
   def to_s
-    return "#{name}"
+    "#{name}"
   end
-
 end

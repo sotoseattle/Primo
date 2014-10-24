@@ -1,8 +1,10 @@
 class Node
-
   private
+
   attr_writer :vars, :neighbors
+
   public
+
   attr_accessor :bag
   attr_reader :vars, :neighbors
 
@@ -10,19 +12,19 @@ class Node
     @vars  = Array(variables).flatten.uniq.sort # is sort needed?
     @neighbors = []
     @bag = {}
-    raise ArgumentError if vars.empty?
+    fail ArgumentError if vars.empty?
   end
 
   def connect(other)
-    return if other==self
+    return if other == self
     unless neighbors.include?(other)
-      self.neighbors  << other 
+      neighbors  << other
       other.neighbors << self
     end
   end
 
   def isolate!
-    neighbors.each{|n| n.neighbors.delete(self)}
+    neighbors.each { |n| n.neighbors.delete(self) }
     self.neighbors = []
   end
 

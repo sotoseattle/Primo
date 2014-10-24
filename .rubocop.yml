@@ -1,0 +1,11 @@
+Documentation:
+  Enabled: false
+
+LineLength:
+  Max: 120
+
+AllCops:
+  RunRailsCops: true
+  Include:
+    - Gemfile
+    - lib/tasks/*
