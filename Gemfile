@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 ruby '2.1.2'
 
+gem 'coveralls', require: false
 gem 'narray'
-# gem 'awesome_print'
 gem 'rspec'
 gem 'rspec-autotest'

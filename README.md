@@ -4,6 +4,7 @@ PRIMO
 ## Probabilistic Inference Modeling with Ruby
 
 ![Travis](https://travis-ci.org/sotoseattle/Primo.svg)
+[![Coverage Status](https://img.shields.io/coveralls/sotoseattle/Primo.svg)](https://coveralls.io/r/sotoseattle/Primo)
 
 Table of Contents
 =================

@@ -1,3 +1,6 @@
+require 'coveralls'
+Coveralls.wear!
+
 # factor based
 require './lib/primo/factors/random_var'     # Class
 require './lib/primo/factors/factor'        # Class
