@@ -31,26 +31,22 @@ class Factor
     vals[*indices]
   end
 
-  def *(other)
-    other.is_a?(Numeric) ? self.vals *= other : modify_by(other, &:*)
-    self
+  ['*', '+'].each do |op|
+    o = op.to_sym
+    define_method(o) do |other|
+      other.is_a?(Numeric) ? self.vals = vals.send(o, other) : modify_by(other, &o)
+      self
+    end
   end
 
-  def +(other)
-    other.is_a?(Numeric) ? self.vals += other : modify_by(other, &:+)
-    self
-  end
-
-  def modify_by(other, &_block)
+  def modify_by(other)
     return self unless other
-    all_vars = [*vars, *other.vars].uniq.sort
 
-    narr1 = grow_axes(all_vars)
-    narr2 = other.grow_axes(all_vars)
-    na = yield narr1, narr2
+    all_vars = [*vars, *other.vars].uniq.sort
+    new_narray = yield(self.grow_axes(all_vars), other.grow_axes(all_vars))
 
     self.vars = all_vars
-    self.vals = na.reshape!(*cardinalities)
+    self.vals = new_narray.reshape!(*cardinalities)
     self
   end
 
@@ -65,12 +61,10 @@ class Factor
   alias_method :%, :marginalize
 
   def marginalize_all_but(variable)
-    axis_to_keep = vars.index(variable)
-    fail ArgumentError unless axis_to_keep
-    axes_to_remove = [*(0...vars.size)].reject { |e| e == axis_to_keep }
-    axes_to_remove.each_with_index do |axis, i|
-      self.vals = vals.sum(axis - i)
-    end
+    fail ArgumentError unless axis_to_keep = vars.index(variable)
+
+    axes_to_remove = [*(0...vars.size)].reject{ |x| x == axis_to_keep }
+    axes_to_remove.each_with_index { |axis, i| self.vals = vals.sum(axis - i) }
     self.vars = [variable]
     self
   end
@@ -86,8 +80,8 @@ class Factor
   end
 
   def normalize_values
-    cumsum = vals.sum(*(0...vars.size))
-    self.vals = vals / cumsum
+    cumulative_sum = vals.sum(*(0...vars.size))
+    self.vals /= cumulative_sum
     self
   end
   alias_method :norm, :normalize_values
@@ -101,7 +95,7 @@ class Factor
   end
 
   def to_ones
-    (Factor.new(vars: vars) + 1.0)
+    Factor.new(vars: vars) + 1.0
   end
 
   def clone

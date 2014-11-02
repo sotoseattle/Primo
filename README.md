@@ -8,15 +8,19 @@ PRIMO
 Table of Contents
 =================
 
-- [Primo]()
+- [Primo](#primo)
 - [Table of Contents](#table-of-contents)
 - [Install](#install)
 - [Intro](#intro)
 - [API](#api)
     - [Random Variables](#random-variables)
     - [Factors](#factors)
+    - [Factor Array](#factor-array)
 - [Examples]()
     - [Genetic Network]()
+- [Authors](#authors)
+- [License](#license)
+
 
 Install
 =======
@@ -28,7 +32,7 @@ The test are written for RSpec 3.1.2.
 Intro
 =====
 
-In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex, difficult but a lot of fun because of all the possibilities it opened up for me. This gem is a liberal translation of the code I worked with in Octave througout the course.
+In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex, difficult but a lot of fun because of all the possibilities it opened up for me. This gem is a liberal translation of the code I worked with in Octave throughout the course.
 
 I have decided to code in Ruby instead of Python (for which I had a previous version) because Ruby is more flexible when building prototypes. The apps that I would like to build around ML are like cars. The engine may be a key component and its performance paramount, but there is more to a car than its engine. These apps will be more than its inference engine, and in all those other aspects Ruby shines. If I was obsessed only with the engine I would have code it in Julia or C, but I am in this for the fun and the possibilities, and Ruby is a pleasure to play with.
 
@@ -64,14 +68,7 @@ An important detail is how we define the <=> operator because we will be compari
   def <=>(other)
     object_id <=> other.object_id
   end
-
-  def [](assignment)
-    ass.index(assignment)
-  end
-
-  def to_s
-    "#{name}"
-  end
+  ...
 end
 ```
 
@@ -127,7 +124,7 @@ The method marginalize_but is a fast implementation of marginalizing in bulk for
 Let's begin by saying that like the previous operations these methods:
 
 - modify the first element ( a * b => a is changed)
-- allow multiplying/adding by number (elementwise) or factor
+- allow multiplying/adding by number (element-wise) or factor
 - override the common operators (* == multiply factors, + == add factors)
 - returns itself so we can chain operations (f1 * f2 * f3)
 
@@ -135,7 +132,7 @@ The key methods. Given two factors I modify each one by:
 
 - gathering all the variables of the resulting multiplication factor (union of all sorted variables)
 - inserting new axis in each factor for each new variable that it doesn't have. This way both factors will have the same axes, in the same order (by the way, this is the reason why we needed a way to sort random variables by id). This is accomplished with simple rotations of the NArray.
-- expanding the values ndarray on each new axis by simply repeating existing values a number of times equal to the cardinality of the axi's variable.
+- expanding the values ndarray on each new axis by simply repeating existing values a number of times equal to the cardinality of the axis variable.
 
 Continuing with the graphic example, to expand our previous factor (variables v1 and v2) by another variable (v3) we would start with the 2D values along axes v1, v2. Then we add a third dimension for v3.
 
@@ -148,26 +145,22 @@ And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v
 At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
 
 ```ruby
-def *(other)
-  other.is_a? Numeric ? self.vals = vals * other : modify_by(other, &:*)
-  self
+['*', '+'].each do |op|
+  o = op.to_sym
+s  define_method(o) do |other|
+    other.is_a?(Numeric) ? self.vals = vals.send(o, other) : modify_by(other, &o)
+    self
+  end
 end
 
-def +(other)
-  other.is_a? Numeric ? self.vals = vals + other : modify_by(other, &:+)
-  self
-end
-
-def modify_by(other, &_block)
+def modify_by(other)
   return self unless other
-  all_vars = [*vars, *other.vars].uniq.sort
 
-  narr1 = grow_axes(all_vars)
-  narr2 = other.grow_axes(all_vars)
-  na = yield narr1, narr2
+  all_vars = [*vars, *other.vars].uniq.sort
+  new_narray = yield(self.grow_axes(all_vars), other.grow_axes(all_vars))
 
   self.vars = all_vars
-  self.vals = na.reshape!(*cardinalities)
+  self.vals = new_narray.reshape!(*cardinalities)
   self
 end
 
@@ -201,3 +194,46 @@ Set values to 0.0 based on observed variables. For example, given a random varia
 
 We modify the NArray values by 1) selecting the observed variable axis and leaving all other axis untouched, and 2) for the selected axis, setting to 0. all cells that are not in the observation column.
 
+Factor Array
+------------
+
+Just a collection of factors referenced by injection. Inherits from Array and add a couple of utility methods and algorithms applicable to sets of factors:
+
+### product
+
+Returns a new factor as the result of multiplying all factors in the array, essentially a reduction by multiplication with optional normalization.
+
+### eliminate_variable!
+
+Variable Elimination Algorithm that modifies all the factors in place by eliminating a selected variable and returns the tau.
+
+
+Authors
+=======
+
+Javier Soto (sotoseattle@gmail.com)
+
+License
+=======
+
+The MIT License
+
+Copyright (c) 2013 Javier Soto
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

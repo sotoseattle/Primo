@@ -19,8 +19,8 @@ describe Factor  do
   let(:a) { Factor.new(vars: v1, vals: [0.11, 0.89]) }
   let(:b) { Factor.new(vars: [v2, v1], vals: [0.59, 0.41, 0.22, 0.78]) }
   let(:c)do
-    Factor.new(vars: [v3, v2, v4], vals: [0.25, 0.35, 0.08, 0.16,
-                                          0.05, 0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])
+    Factor.new(vars: [v3, v2, v4],
+               vals: [0.25, 0.35, 0.08, 0.16, 0.05, 0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])
   end
   let(:e) { Factor.new(vars: [v5, v1]) }
 
