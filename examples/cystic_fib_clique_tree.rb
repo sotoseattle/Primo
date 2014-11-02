@@ -1,15 +1,17 @@
-# CYSTIC FIBROSIS BAYESIAN NETWORK
-# computed as a whole joint probability factor of ALL variables
-# very brutish and primitive but helps test and benchmark factor operations
+# GENETIC BAYESIAN NETWORK III
+# computed with a clique tree, fast and reliable, scales very well
+
+require 'primo'
+
 class Phenotype < RandomVar
   def initialize(name)
-    super({ card: 2, name: name, ass: %w(present absent) })
+    super(card: 2, name: name, ass: %w(present absent))
   end
 end
 
 class Genotype < RandomVar
   def initialize(name)
-    super({ card: 3, name: name, ass: %w(FF Ff ff) })
+    super(card: 3, name: name, ass: %w(FF Ff ff))
   end
 end
 
@@ -66,7 +68,7 @@ end
 #########################   TESTING   ##############################
 ####################################################################
 
-a = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito)) # Pepe Juan Margarita})
+a = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito Pepe Juan Margarita))
 
 a['James'].is_son_of(a['Ira'], a['Robin'])
 a['Eva'].is_son_of(a['Ira'], a['Robin'])
@@ -74,9 +76,9 @@ a['Sandra'].is_son_of(a['Aaron'], a['Eva'])
 a['Jason'].is_son_of(a['James'], a['Rene'])
 a['Benito'].is_son_of(a['James'], a['Rene'])
 
-# a['Pepe'].is_son_of(a['James'], a['Sandra'])
-# a['Juan'].is_son_of(a['Aaron'], a['Eva'])
-# a['Margarita'].is_son_of(a['Juan'], a['Pepe'])
+a['Pepe'].is_son_of(a['James'], a['Sandra'])
+a['Juan'].is_son_of(a['Aaron'], a['Eva'])
+a['Margarita'].is_son_of(a['Juan'], a['Pepe'])
 
 a['Ira'].observe('present', 'phen')
 a['James'].observe('Ff', 'geno')

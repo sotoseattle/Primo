@@ -1,15 +1,18 @@
-# CYSTIC FIBROSIS BAYESIAN NETWORK DECOUPLED
+# GENETIC BAYESIAN NETWORK II
 # computed as a whole joint probability factor of ALL variables
-# very brutish and primitive but helps test and benchmark factor operations
+# even more brutish than because decoupling means more variables and dimensions
+
+require 'primo'
+
 class PhenoType < RandomVar
   def initialize(name)
-    super({ card: 2, name: name, ass: %w(present absent) })
+    super(card: 2, name: name, ass: %w(present absent))
   end
 end
 
 class AlleleType < RandomVar
   def initialize(name)
-    super({ card: 3, name: name, ass: %w(F f n) })
+    super(card: 3, name: name, ass: %w(F f n))
   end
 end
 
@@ -94,7 +97,7 @@ end
 #########################   TESTING   ##############################
 ####################################################################
 # Beware, adding Sandra makes the joint CPD so huge that it blows
-# a segmentation bug because the resulting NArray is too big
+# a segmentation error. The resulting NArray is too big
 
 # a = Family.new(%w{Ira Robin Aaron Rene James Eva Sandra Jason Benito})
 # a = Family.new(%w{Ira Robin Rene James Eva Benito Sandra})

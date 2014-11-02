@@ -14,9 +14,8 @@ Table of Contents
 - [Primo](#primo)
 - [Table of Contents](#table-of-contents)
 - [Install](#install)
+- [Usage](#usage)
 - [Intro](#intro)
-- [Examples](examples)
-    - [Genetic Network I]()
 - [API](#api)
     - [Random Variable](#random-variables)
     - [Factor](#factor)
@@ -26,16 +25,41 @@ Table of Contents
     - [Tree](#Tree)
     - [Induced Markov](#induced-markov)
     - [Clique Tree](#clique-tree)
+- [Examples](examples)
 - [Authors](#authors)
 - [License](#license)
-
 
 Install
 =======
 
-It works in Ruby 2.1.2
+Clone the git repo from github, move to the cloned root directory and install:
+
+```bash
+gem install ./soto-primo-0.0.1.gem
+```
+
+It works in Ruby 2.1.2.
+
 The main dependency is the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), version 0.6.
+
 The test are written for RSpec 3.1.2.
+
+Usage
+=====
+
+To use it in your code add to your Gemfile:
+
+```ruby
+# Gemfile
+gem 'soto-primo'
+```
+
+And require it in your code:
+
+```ruby
+# your code
+require 'primo'
+```
 
 Intro
 =====
@@ -47,13 +71,6 @@ I have decided to code in Ruby instead of Python (for which I had a previous ver
 Besides, what I have already coded in Ruby is already faster than my Python code (which shows what a beginner I am in Python). The key to the performance boost has been the use of the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), which allows me to, for example, multiply two multidimensional arrays element wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
 
 I have christened this working library PRIMO (Probabilistic Inference Modeling) because in Spanish it means either prime, first, cousin or dumb! :)
-
-Examples
-========
-
-Included in this gem there are three examples of Bayesian Genetic Network. The first two are computed simply with Factors, and the third one with a Clique Tree. Here I draft how the third runs.
-
-
 
 
 API
@@ -397,6 +414,123 @@ Once calibrated we can query the tree and extract the probability of any variabl
 
 We are looking for the probability of a certain variable, so we find the first node that holds it, we then marginalize the beta inside that node for all its variables except the one we want. The result of the query is then the probability distribution over that variable (result of the marginalization) or a specific value if we have passed along the assignment we want to infere about.
 
+Examples
+========
+
+Included are some examples of Bayesian Genetic Networks and how to compute the probability of specific persons showing a specific phenotype given the family history and genetic observations.
+
+Brute Force Approach
+--------------------
+
+First we will study Cystic Fibrosis and the probability that a person will develop CF given its genes.
+
+Given a family tree, for each member of the family we are going to have two nodes, one for the person’s genotype, and another for her phenotype. The template would be:
+
+<div style="text-align:center">
+  <img src="public/images/template.png" align="center" width="300"/>
+</div>
+<br>
+
+Where the random variables correspond to:
+
+```ruby
+class Phenotype < RandomVar
+  def initialize(name)
+    super(card: 2, name: name, ass: %w(present absent))
+  end
+end
+
+class Genotype < RandomVar
+  def initialize(name)
+    super(card: 3, name: name, ass: %w(FF Ff ff))
+  end
+end
+```
+
+And our coded example (cystic_fib_joint_cpd.rb) has the following family tree and set of linked variables.
+
+```ruby
+smiths = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito))
+
+simths['James'].is_son_of(simths['Ira'], simths['Robin'])
+simths['Eva'].is_son_of(simths['Ira'], simths['Robin'])
+simths['Sandra'].is_son_of(simths['Aaron'], simths['Eva'])
+simths['Jason'].is_son_of(simths['James'], simths['Rene'])
+simths['Benito'].is_son_of(simths['James'], simths['Rene'])
+
+smiths.compute_factors
+```
+
+<div style="text-align:center">
+  <img src="public/images/cysticBN.png" align="center" />
+</div>
+<br>
+
+I will build the factors that bind these variables depending on what genes are inherited and the probabilities of finding them in the general population. Check [here](http://localhost:4000/blog/2013/11/03/Genetic-BN/) to see how exactly I did it.
+
+The main problem is that we are computing probabilities by multiplying factors together, which means creating a CPD for the whole universe of possible assignments of all random variables (nodes). This super table takes into consideration all possible states, all possible scenarios, and therefore is huge.
+
+But before we compute it, we rather simplify things by adding the observations we have. We know that Ira had Cystic Fibrosis, and James and Rene had a genetic test and therefore knew which genes were present in their cases.
+
+```ruby
+simths['Ira'].observe_pheno('present')
+simths['James'].observe_gen('Ff')
+simths['Rene'].observe_gen('FF')
+```
+
+Finally we compute the super factor and query it to see the probability of Benito showing symptons.
+
+```ruby
+cpd = a.compute_whole_joint
+cpd.marginalize_all_but(a['Benito'].phn)
+puts "Probability of Benito showing illness: #{cpd['present']}"
+=> 0.7 # or 70%
+```
+
+Smart Approach
+--------------
+
+Running the same Genetic Network for cystic fibrosis using Clique Trees instead of inferring marginals by computing the overall factor product over all the variables (which we saw was exhaustive and intensive), is a much faster approach. (cystic_fib_clique_tree.rb)
+
+The associated clique tree is similar to the following image. All potentials (factors) will hold a handful of variables instead of a multitude of them , and Belief Propagation allows us to query it instantaneously.
+
+<div style="text-align:center">
+  <img src="public/images/cystic_BN_clique.png" align="center" />
+</div>
+<br>
+
+We only need to create and calibrate the tree given the factors:
+
+```ruby
+clique_tree = CliqueTree.new(*all_factors)
+clique_tree.calibrate
+```
+
+And the probability of the phenotype is computed in a single step:
+
+```ruby
+def prob_sick(name)
+  variable = self[name].phenotype
+  100 * clique_tree.query(variable, 'present')
+end
+```
+
+In the same manner we can use Clique Trees to compute the example on cystic_fib_decoupled.rb, that has an even bigger joint table because now each gene is decoupled in the following manner:
+
+<div style="text-align:center">
+  <img src="public/images/decoup_cysticBN.png" align="center" />
+</div>
+<br>
+
+And the Clique Tree that results is still very small and easy to traverse.
+
+<div style="text-align:center">
+  <img src="public/images/cystic_decoup_BN_clique.png" align="center" />
+</div>
+<br>
+
+You can imagine that as we add people, variables and nodes, the only sane way to go about is with Clique Trees. This gem provides the tools to create complex inference based on Bayesian Networks.
+
 Authors
 =======
 
@@ -409,20 +543,8 @@ The MIT License
 
 Copyright (c) 2013 Javier Soto
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

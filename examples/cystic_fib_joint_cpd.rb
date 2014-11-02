@@ -1,15 +1,18 @@
-# CYSTIC FIBROSIS BAYESIAN NETWORK
+# GENETIC BAYESIAN NETWORK I
 # computed as a whole joint probability factor of ALL variables
 # very brutish and primitive but helps test and benchmark factor operations
+
+require 'primo'
+
 class Phenotype < RandomVar
   def initialize(name)
-    super({ card: 2, name: name, ass: %w(present absent) })
+    super(card: 2, name: name, ass: %w(present absent))
   end
 end
 
 class Genotype < RandomVar
   def initialize(name)
-    super({ card: 3, name: name, ass: %w(FF Ff ff) })
+    super(card: 3, name: name, ass: %w(FF Ff ff))
   end
 end
 
