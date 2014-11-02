@@ -9,15 +9,20 @@ describe Node  do
     context 'without variables' do
       it { expect { Node.new }.to raise_error(ArgumentError) }
     end
+
     context 'with proper variables' do
       subject { Node.new(v1, v2, v2) }
       it { is_expected.to respond_to(:vars) }
+
       it { is_expected.to respond_to(:neighbors) }
+
       it { expect(subject.vars.size).to eq(2) }
+
       it 'has no neighbors at creation' do
         expect(subject.neighbors).to be_empty
       end
     end
+
     context 'with array of variables' do
       it { expect { Node.new([v1, v2, v2]) }.not_to raise_error }
     end
@@ -31,18 +36,22 @@ describe Node  do
     it 'should increment the neighbors array' do
       expect { n1.connect(n2) }.to change { n1.neighbors.size }.by(1)
     end
+
     it 'should add the node to neighbors array' do
       n1.connect(n2)
       expect(n1.neighbors).to include n2
     end
+
     it "should add itself to the connected node's neighbors" do
       n1.connect(n2)
       expect(n2.neighbors).to include n1
     end
+
     it 'should not connect if already connected' do
       n1.connect(n2)
       expect { n1.connect(n2) }.not_to change { n1.neighbors.size }
     end
+
     it 'should not connect to itself' do
       expect { n1.connect(n1) }.not_to change { n1.neighbors.size }
     end
@@ -59,6 +68,7 @@ describe Node  do
       expect { n1.isolate! }.to change { n1.neighbors.size }.by(-2)
       expect(n1.neighbors).to be_empty
     end
+
     it 'remove itself from the neighbors of its previously connected nodes' do
       n1.connect(n2)
       n1.connect(n3)
@@ -68,7 +78,6 @@ describe Node  do
       expect(n3.neighbors).not_to include(n1)
       expect(n3.neighbors).to include(n2)
     end
-
   end
 
   context '#weight' do

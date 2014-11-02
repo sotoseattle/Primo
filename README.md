@@ -1,9 +1,9 @@
 PRIMO
 ====
 
-## Probabilistic Inference Modelling with Ruby
+## Probabilistic Inference Modeling with Ruby
 
-[]()
+![Travis](https://travis-ci.org/sotoseattle/Primo.svg)
 
 Table of Contents
 =================
@@ -13,9 +13,14 @@ Table of Contents
 - [Install](#install)
 - [Intro](#intro)
 - [API](#api)
-    - [Random Variables](#random-variables)
-    - [Factors](#factors)
+    - [Random Variable](#random-variables)
+    - [Factor](#factor)
     - [Factor Array](#factor-array)
+    - [Node](#node)
+    - [Graph](#Graph)
+    - [Tree](#Tree)
+    - [Induced Markov](#induced-markov)
+    - [Clique Tree](#clique-tree)
 - [Examples]()
     - [Genetic Network]()
 - [Authors](#authors)
@@ -43,7 +48,7 @@ I have christened this working library PRIMO (Probabilistic Inference Modeling) 
 API
 ===
 
-Random Variables
+Random Variable
 ----------------
 
 The essential building block of Primo, similar to Nodes in graphs, each holds the following instance variables:
@@ -72,14 +77,14 @@ An important detail is how we define the <=> operator because we will be compari
 end
 ```
 
-Factors
+Factor
 -------
 
 The best way to visualize a Factor is in terms of an n-dimensional matrix. Each dimension (or axis) corresponds to a random variable. These variables are held in the `@vars` instance variable.
 
 Each axis has as many possible values as its cardinality. A Factor made of two binary variables (x, y) will be similar to a 2x2 matrix.
 
-For example, let's say we have coins, one true and one biased. We declare two random variables that represent the toss of each coin, both being binary (head or tails). Then we can create for each variable a factor with the following characteristics:
+For example, let's say we have two coins, one true and one biased. We declare two random variables that represent the toss of each coin, both being binary (head or tails). Then we can create for each variable a factor with the following characteristics:
 
 - each factor holds a single random variable
 - each factor, in tabular form shows the possible outcomes (assignments) and values (probabilities)
@@ -89,6 +94,7 @@ We compute the joint probability table as a factor that holds both variables, so
 <div style="text-align:center">
   <img src="public/images/coins.png" align="center" />
 </div>
+<br>
 
 So we see that a factor's state includes both
 
@@ -105,6 +111,7 @@ We want to eliminate a dimension, (a variable or axis), by adding all values alo
 <div style="text-align:center">
   <img src="public/images/margin_coins.png" align="center" />
 </div>
+<br>
 
 We alias the method to the modulus operator `%` for syntactical convenience. This method also allows for chaining operations i.e. f1 % v1 % v2 eliminates in order, first v1 from f1, and then v2 from the resulting factor. Each time % kicks in, f1 is modified in place.
 
@@ -114,6 +121,7 @@ Another example from a multidimensional array perpective. The following factor f
 coins.png
   <img src="public/images/margin.png" align="center" />
 </div>
+<br>
 
 The method marginalize_but is a fast implementation of marginalizing in bulk for all variables in the factor except for one that we want to extract. In this operation we end up with the final probabilities of all assignments for that selected random variable.
 
@@ -137,12 +145,14 @@ Continuing with the graphic example, to expand our previous factor (variables v1
 <div style="text-align:center">
   <img src="public/images/multiply1.png" align="center" />
 </div>
+<br>
 
 And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v2 have cardinality 2 and v3 has cardinality 3 so we repeat the 2D matrix twice more along the v3 axis.
 
 <div style="text-align:center">
   <img src="public/images/multiply2.png" align="center" />
 </div>
+<br>
 
 At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
 
@@ -192,11 +202,12 @@ end
 
 Set values to 0.0 based on observed variables. For example, given a random variable of color that can only take two possible values (red, blue).i If we know that the color is red, then p(blue)=0.0.
 
-In our coins example, if having the joint probability of variables A and B, we know toss the coin B and see that it is heads, we can modify the joint factor to say that since B was heads, every probability of B being tails should be 0.00. This operation modifies the values (making zero impossible outcomes) but still holds both variables.
+In our coins example, if having the joint probability of variables A and B, we know toss the coin B and see that it is heads, we can modify the joint factor to say that since B was heads, every probability of B being tails should be 0.00. This operation modifies the values (making zero impossible outcomes) but still holds both variables. See how the resulting values are un-normalized and do not add to 1.00.
 
 <div style="text-align:center">
   <img src="public/images/reduction_coins.png" align="center" />
 </div>
+<br>
 
 We modify the NArray values by 1) selecting the observed variable axis and leaving all other axis untouched, and 2) for the selected axis, setting to 0. all cells that are not in the observation column.
 
@@ -209,7 +220,7 @@ Just a collection of factors referenced by injection. Inherits from Array and ad
     Returns a new factor as the result of multiplying all factors in the array, essentially a reduction by multiplication with optional normalization.
 
 - **eliminate_variable!**
-    Variable Elimination Algorithm that modifies all the factors in place by eliminating a selected variable and returns the tau.
+    Variable Elimination Algorithm that modifies all the factors in place by eliminating a selected variable. It adds the resulting tau to the end of the factor array as another factor, and returns the tau back.
 
 
 Authors
