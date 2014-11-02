@@ -15,6 +15,8 @@ Table of Contents
 - [Table of Contents](#table-of-contents)
 - [Install](#install)
 - [Intro](#intro)
+- [Examples](examples)
+    - [Genetic Network I]()
 - [API](#api)
     - [Random Variable](#random-variables)
     - [Factor](#factor)
@@ -24,8 +26,6 @@ Table of Contents
     - [Tree](#Tree)
     - [Induced Markov](#induced-markov)
     - [Clique Tree](#clique-tree)
-- [Examples]()
-    - [Genetic Network]()
 - [Authors](#authors)
 - [License](#license)
 
@@ -47,6 +47,14 @@ I have decided to code in Ruby instead of Python (for which I had a previous ver
 Besides, what I have already coded in Ruby is already faster than my Python code (which shows what a beginner I am in Python). The key to the performance boost has been the use of the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), which allows me to, for example, multiply two multidimensional arrays element wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
 
 I have christened this working library PRIMO (Probabilistic Inference Modeling) because in Spanish it means either prime, first, cousin or dumb! :)
+
+Examples
+========
+
+Included in this gem there are three examples of Bayesian Genetic Network. The first two are computed simply with Factors, and the third one with a Clique Tree. Here I draft how the third runs.
+
+
+
 
 API
 ===
@@ -294,16 +302,16 @@ Given a network of random variables (Bayes or Markov) defined by a set of factor
 - Reduce all factors by evidence and have set of factors (F)
 - Choose the variable to eliminate (z)
 - Gather the factors that have z in their scope
-- Multiply them together into a new factor ($\lambda$)
-- Marginalize $\lambda$ for z to produce $\tau$
-- The new set of factors is reduced by the factors 'sum-producted' plus the new one $\tau$
+- Multiply them together into a new factor (lambda)
+- Marginalize lambda for z to produce tau
+- The new set of factors is reduced by the factors 'sum-producted' plus the new one tau
 - ... repeat until ...
 - the last set of factors we just multiply together and renormalize
 
 The complexity of this algorithm depends linearly on:
 
 - the size of the model (number variables and factors), and
-- on the number of variables of the largest factor generated in the process ($tau$), whose size is in itself exponential in its scope (i.e. 9 binary vars => 2^9).
+- on the number of variables of the largest factor generated in the process (tau), whose size is in itself exponential in its scope (i.e. 9 binary vars => 2^9).
 
 Therefore, the elimination ordering is the key to the algorithm's efficiency (because the order defines the size of the generated factors).
 
@@ -313,7 +321,7 @@ Graphically, to find the best ordering we:
 - moralize the V structures by connecting the parents. The key being that every factor's scope is represented in the graph, so if I have Factor(A,B,C) => there must be connections between each pair of them: AB, AC, BC.
 - as we eliminate variables two things happen:
   - the eliminated variables are removed from the graph (and their links)
-  - the resulting scope of the $\tau$ must also be reflected in the graph with additional connections! (filled edges). Another way to see it, all the variables connected to the eliminated one, become connected among themselves.
+  - the resulting scope of the tau must also be reflected in the graph with additional connections! (filled edges). Another way to see it, all the variables connected to the eliminated one, become connected among themselves.
 
 The initial graph plus all the filled edges is called the [Induced Graph](#induced-markov). This graph is very important because:
 
@@ -377,9 +385,9 @@ After creation the next step is to calibrate it with Belief Propagation. Since o
 
 Here enters the cascade_path we computed from the Breadth First Search algorithm. The private method `message_path` will return the complete path (firing messages sequence) that we'll need for Belief Propagation, traversing the tree both ways.
 
-We follow the schedule and compute for each edge the message ($\delta_{ij}$) passed between nodes $C_i$ and $C_j$. The method `compute_message` computes the delta as the cumproduct of potential and incoming messages. `incoming_messages` gather incomming messages to the node.
+We follow the schedule and compute for each edge the message (delta_{ij}) passed between nodes C_i and C_j. The method `compute_message` computes the delta as the cumproduct of potential and incoming messages. `incoming_messages` gather incomming messages to the node.
 
-After just two passes, once forward and once backwards throughout the whole tree, we are guaranteed to have achieved calibration. At this moment all the necessary messages ($\delta$) are now computed and we can compute the beliefs ($\beta$) in each node as the product of the initial potential and all its incomming messages.
+After just two passes, once forward and once backwards throughout the whole tree, we are guaranteed to have achieved calibration. At this moment all the necessary messages (delta) are now computed and we can compute the beliefs (beta) in each node as the product of the initial potential and all its incomming messages.
 
 The key is that having achieved calibration, the exact marginals of all variables coincide independently on which belief/node we marginalize.
 
@@ -388,10 +396,6 @@ The key is that having achieved calibration, the exact marginals of all variable
 Once calibrated we can query the tree and extract the probability of any variable assignment.
 
 We are looking for the probability of a certain variable, so we find the first node that holds it, we then marginalize the beta inside that node for all its variables except the one we want. The result of the query is then the probability distribution over that variable (result of the marginalization) or a specific value if we have passed along the assignment we want to infere about.
-
-
-
-
 
 Authors
 =======

@@ -69,11 +69,12 @@ describe Factor  do
     context 'by factor' do
       it 'modifies in place (the first) with product algorithm: I' do
         a * b
-        target = (if a.__id__ > b.__id__
-          NArray[0.0649, 0.0451, 0.1958, 0.6942]
-        else
-          NArray[0.0649, 0.1958, 0.0451, 0.6942]
-        end).reshape!(2, 2)
+        target = if a.__id__ > b.__id__
+                   NArray[0.0649, 0.0451, 0.1958, 0.6942]
+                 else
+                   NArray[0.0649, 0.1958, 0.0451, 0.6942]
+                 end
+        target.reshape!(2, 2)
         expect(a).to match_each_cell(target, TOL)
       end
 
@@ -83,17 +84,15 @@ describe Factor  do
         r3 = RandomVar.new(card: 2, name: 'r3')
         x1 = Factor.new(vars: [r2, r1], vals: [0.5, 0.8, 0.1, 0.0, 0.3, 0.9])
         y1 = Factor.new(vars: [r3, r2], vals: [0.5, 0.7, 0.1, 0.2])
-
         x1 * y1
-
         if x1.__id__ < y1.__id__
-          target = [ [ [ 0.25, 0.05, 0.15 ], [ 0.08, 0.0, 0.09 ] ],
-                   [   [ 0.35, 0.07, 0.21 ], [ 0.16, 0.0, 0.18 ] ] ]
+          target = [[[0.25, 0.05, 0.15], [0.08, 0.0, 0.09]],
+                    [[0.35, 0.07, 0.21], [0.16, 0.0, 0.18]]]
           expect(x1).to match_each_cell(target, TOL)
         else
-          target = [ [ [ 0.25, 0.35 ], [ 0.08, 0.16 ] ],
-                   [   [ 0.05, 0.07 ], [ 0.00, 0.00 ] ],
-                   [   [ 0.15, 0.21 ], [ 0.09, 0.18 ] ] ]
+          target = [[[0.25, 0.35], [0.08, 0.16]],
+                    [[0.05, 0.07], [0.00, 0.00]],
+                    [[0.15, 0.21], [0.09, 0.18]]]
           expect(x1).to match_each_cell(target, TOL)
         end
       end
@@ -109,10 +108,10 @@ describe Factor  do
     it 'by factor, it modifies in place (the first) with addition algorithm' do
       a + b
       if a.__id__ < b.__id__
-        target = [ [ 0.7, 1.11 ], [ 0.52, 1.67 ] ]
+        target = [[0.7, 1.11], [0.52, 1.67]]
         expect(a).to match_each_cell(target, TOL)
       else
-        target = [ [ 0.7, 0.52 ], [ 1.11, 1.67 ] ]
+        target = [[0.7, 0.52], [1.11, 1.67]]
         expect(a).to match_each_cell(target, TOL)
       end
     end
@@ -191,18 +190,19 @@ describe Factor  do
 
       f1 = Factor.new(vars: [v1], vals: [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
       f2 = Factor.new(vars: [v8, v2], vals: [0.9, 0.1, 0.5, 0.5, 0.1, 0.9])
-      f3 = Factor.new(vars: [v3, v4, v7, v2], vals: [0.9, 0.1, 0.8, 0.2, 0.7,
-                                                     0.3, 0.6, 0.4, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8, 0.1, 0.9])
+      f3 = Factor.new(vars: [v3, v4, v7, v2],
+                      vals: [0.9, 0.1, 0.8, 0.2, 0.7, 0.3, 0.6, 0.4,
+                             0.4, 0.6, 0.3, 0.7, 0.2, 0.8, 0.1, 0.9])
       f4 = Factor.new(vars: [v4], vals: [0.5, 0.5])
-      f5 = Factor.new(vars: [v5, v6], vals: [0.75, 0.2, 0.05, 0.2, 0.6, 0.2,
-                                             0.05, 0.2, 0.75])
+      f5 = Factor.new(vars: [v5, v6],
+                      vals: [0.75, 0.2, 0.05, 0.2, 0.6, 0.2, 0.05, 0.2, 0.75])
       f6 = Factor.new(vars: [v6], vals: [0.3333, 0.3333, 0.3333])
-      f7 = Factor.new(vars: [v7, v5, v6], vals: [0.9, 0.1, 0.8, 0.2, 0.7, 0.3,
-                                                 0.6, 0.4, 0.5, 0.5, 0.4, 0.6, 0.3, 0.7,
-                                                 0.2, 0.8, 0.1, 0.9])
-      f8 = Factor.new(vars: [v8, v4, v1], vals: [0.1, 0.3, 0.6, 0.05, 0.2, 0.75,
-                                                 0.2, 0.5, 0.3, 0.1, 0.35, 0.55, 0.8, 0.15,
-                                                 0.05, 0.2, 0.6, 0.2])
+      f7 = Factor.new(vars: [v7, v5, v6],
+                      vals: [0.9, 0.1, 0.8, 0.2, 0.7, 0.3, 0.6, 0.4, 0.5, 0.5,
+                             0.4, 0.6, 0.3, 0.7, 0.2, 0.8, 0.1, 0.9])
+      f8 = Factor.new(vars: [v8, v4, v1],
+                      vals: [0.1, 0.3, 0.6, 0.05, 0.2, 0.75, 0.2, 0.5, 0.3, 0.1,
+                             0.35, 0.55, 0.8, 0.15, 0.05, 0.2, 0.6, 0.2])
 
       [f1, f2, f3, f4, f5, f6, f7, f8].reduce(:*)
       [v2, v3, v4, v5, v6, v7, v8].each { |v| f1 % v }

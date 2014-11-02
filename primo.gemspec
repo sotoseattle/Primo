@@ -5,11 +5,11 @@ require 'primo/version'
 Gem::Specification.new do |s|
   s.name        = 'primo'
   s.version     = '0.0.1'
-  s.version     = Grimoire::VERSION
+  s.version     = Primo::VERSION
   s.date        = '2014-08-31'
   s.platform    = Gem::Platform::RUBY
   s.summary     = 'Graphical Inference Modelling (with Ruby)'
-  s.description = "Follows the 'Probabilistic Graphical Models' course from Stanford U"
+  s.description = 'Graphical Inference Modelling (with Ruby)'
   s.authors     = ['Javier Soto']
   s.email       = ['sotoseattle@gmail.com']
 
