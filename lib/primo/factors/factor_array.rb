@@ -1,5 +1,3 @@
-require_relative './Factor'
-
 class FactorArray < Array
   def product(normalize = true)
     wip_factor = first.to_ones

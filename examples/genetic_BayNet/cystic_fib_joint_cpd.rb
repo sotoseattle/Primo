@@ -1,9 +1,6 @@
 # CYSTIC FIBROSIS BAYESIAN NETWORK
 # computed as a whole joint probability factor of ALL variables
 # very brutish and primitive but helps test and benchmark factor operations
-
-require_relative '../../lib/primo'
-
 class Phenotype < RandomVar
   def initialize(name)
     super({ card: 2, name: name, ass: %w(present absent) })
