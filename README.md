@@ -84,28 +84,23 @@ Each axis has as many possible values as its cardinality. A Factor made of two b
 
 For example, given two random variables that represent the toss of a coin, both being binary (head or tails) would give us the following factor:
 
-|-----|-----|------|
+
 |     |head |tails |
 |-----|-----|------|
 |head | p(h & h)| p(h & t)|
 |tails| p(t & h)| p(t & t)|
-|-----|-----|------|
-{:.widetable}
 
 <br/>
 
 In tabular form we have:
 
 
-|--------|-------------|
 |outcome | probability |
 |--------|-------------|
 |head & head | p(h & h) |
 |head & tail | p(h & t) |
 |tail & head | p(t & h) |
 |tail & tail | p(t & t) |
-|--------|-------------|
-{:.widetable}
 
 <br/>
 
@@ -123,7 +118,7 @@ It allows for chaining operations i.e. f1 % v1 % v2 eliminates in order, first v
 
 If for example, the factor f1, has only those two random variables (v1, v2), reducing on v2 means selecting the axis for v2 and for each row of v1, adding up all columns of v2.
 
-{% img center /images/nov13/margin.png %}
+![](public/images/margin.png)
 
 The method marginalize_but is a fast implementation of marginalizing in bulk for all variables in the factor except for one that we want to extract. In this operation we end up with the final probabilities of all assignments for that selected random variable.
 
@@ -144,15 +139,15 @@ The key methods. Given two factors I modify each one by:
 
 Continuing with the graphic example, to expand our previous factor (variables v1 and v2) by another variable (v3) we would start with the 2D values along axes v1, v2. Then we add a third dimension for v3.
 
-{% img center /images/nov13/multiply1.png %}
+![](public/images/multiply1.png)
 
 And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v2 have cardinality 2 and v3 has cardinality 3 so we repeat the 2D matrix twice more along the v3 axis.
 
-{% img center /images/nov13/multiply2.png %}
+![](public/images/multiply2.png)
 
 At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
 
-```ruby Factor Multiplication & Addition
+```ruby
 def *(other)
   other.is_a? Numeric ? self.vals = vals * other : modify_by(other, &:*)
   self
