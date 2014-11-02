@@ -121,7 +121,6 @@ We alias the method to the modulus operator `%` for syntactical convenience. Thi
 Another example from a multidimensional array perpective. The following factor f1, has only those two random variables (v1, v2), reducing on v2 means selecting the axis for v2 and for each row of v1, adding up all columns of v2.
 
 <div style="text-align:center">
-coins.png
   <img src="public/images/margin.png" align="center" />
 </div>
 <br>
@@ -277,6 +276,119 @@ It is used as an intermediary process to create a clique tree from a set of fact
 
 Clique Tree
 -----------
+
+The big kahuna in terms of complexity of all Primo Classes, rivals in importance with the Factor class. In this class many of the modules, methods and objects defined previously fit together to produce our inference engine.
+
+To build a Clique Tree we do three things:
+
+- create a tree of cliques from a set of factors
+- prune the tree
+- assign the factors to the new nodes as potentials
+
+#### Building a Tree of Cliques
+
+To understand the code we need to understand how Variable Elimination works.
+
+Given a network of random variables (Bayes or Markov) defined by a set of factors the way to do [Variable Elimination](#factor-array) is straightforward:
+
+- Reduce all factors by evidence and have set of factors (F)
+- Choose the variable to eliminate (z)
+- Gather the factors that have z in their scope
+- Multiply them together into a new factor ($\lambda$)
+- Marginalize $\lambda$ for z to produce $\tau$
+- The new set of factors is reduced by the factors 'sum-producted' plus the new one $\tau$
+- ... repeat until ...
+- the last set of factors we just multiply together and renormalize
+
+The complexity of this algorithm depends linearly on:
+
+- the size of the model (number variables and factors), and
+- on the number of variables of the largest factor generated in the process ($tau$), whose size is in itself exponential in its scope (i.e. 9 binary vars => 2^9).
+
+Therefore, the elimination ordering is the key to the algorithm's efficiency (because the order defines the size of the generated factors).
+
+Graphically, to find the best ordering we:
+
+- transform the directed graph to undirected (from Bayes Net to Induced Markov Net)
+- moralize the V structures by connecting the parents. The key being that every factor's scope is represented in the graph, so if I have Factor(A,B,C) => there must be connections between each pair of them: AB, AC, BC.
+- as we eliminate variables two things happen:
+  - the eliminated variables are removed from the graph (and their links)
+  - the resulting scope of the $\tau$ must also be reflected in the graph with additional connections! (filled edges). Another way to see it, all the variables connected to the eliminated one, become connected among themselves.
+
+The initial graph plus all the filled edges is called the [Induced Graph](#induced-markov). This graph is very important because:
+
+- every factor produced during VE is a clique in the Induced Graph, and
+- every maximal clique in the Induced Graph is factor produced during VE
+- an Induced Graph is triangulated (no loops of length > 3 without a bridge)
+
+Ways to find a good ordering are:
+
+1. performing a greedy search using an ad-hoc cost function and at each point eliminate the node with the smallest cost. Examples:
+- min-neigbors: pick the node with the minimum number of neighbors (smallest factor),
+- min-weight: considering that different variables have different cardinalities it would be better a factor of 10 binary vars than a factor of two vars but each of 100 possible values.
+- min -fill: choose vars that create the min amount of new connections (a very good approach),
+- weighted min-fill.
+2. finding a low-width triangulation of original graph (beyond my reach)
+
+To build a CT we need a list of factors from which we start deriving the set of all random variables and the matrix of edges between them. Then we iteratively run variable elimination choosing as the variable to eliminate the first one with the least edges (min neighbors).
+
+For example, the following Pairwise Markov Grid...
+
+<div style="text-align:center">
+  <img src="public/images/toy_grid.png" align="center" />
+</div>
+<br>
+
+... would create the following clique tree through variable elimination.
+
+<div style="text-align:center">
+  <img src="public/images/ct_toy_grid.png" align="center" />
+</div>
+<br>
+
+
+#### Pruning the Tree
+
+The problem is that many times, the clique tree will be unnecessary big. Many cliques will be subsets of others. It makes sense to collect them together than keep them alive and repeat unnecessary motions. For example, if we have all the info in a clique with variables A,B,C we don't need another clique (node) that holds variables A and B, since the first one already has it all. We can create a more compact and efficient tree if we prune these unnecessary nodes.
+
+The process is not complicated: Go over all the nodes of the tree one at a time. For each one get its connected nodes (neighbors) and go through them. If the variable set of the node under study is a strict subset of the variable set of one of its connected neighbors we can prune the subset node. The key step is to reconnect the superset node to all the other neighbors of the subset node. Then we just delete the subset node and its associated row and column from the edges matrix.
+
+For example, imagine the following clique tree:
+
+ABC --- AB --- AE
+
+Let's say we start with AB. We scan through its neighbors (ABC, AE) and find that AB is a subset of ABC. So we cut off the edges connected to AB and add an edge between ABC and all of AB's other neighbors (in this case just AE). This maintains the running intersection property and compacts the clique tree which now looks like: ABC -- AE.
+
+#### Initializing Potentials
+
+So far we have a tree of nodes but we still need the factors that will add the values to process. We do have factors (from which we created the tree), now we need to assign those factors to the right nodes, and we refer to these as potentials. We do it in two steps.
+
+First, we create factors/potentials for each node, with all values initialized to one. Then for each factor in the input factor list, we choose the first node whose variable set holds all the factor's variables, and the node's potential becomes the factor product of the node's potential itself and the newly assigned factor (remember that we set an innocuous factor of ones beforehand).
+
+If a factor is unassigned we raise an exception.
+
+If a node is factor-less (or one of its variables), there is no problem because we had it already initialized to ones.
+
+And voilá, we have a clique tree.
+
+#### Calibration
+
+After creation the next step is to calibrate it with Belief Propagation. Since our clique tree is an undirected graph we can use the BFS (Breadth First Search) algorithm to give us a correct path for belief propagation.
+
+Here enters the cascade_path we computed from the Breadth First Search algorithm. The private method `message_path` will return the complete path (firing messages sequence) that we'll need for Belief Propagation, traversing the tree both ways.
+
+We follow the schedule and compute for each edge the message ($\delta_{ij}$) passed between nodes $C_i$ and $C_j$. The method `compute_message` computes the delta as the cumproduct of potential and incoming messages. `incoming_messages` gather incomming messages to the node.
+
+After just two passes, once forward and once backwards throughout the whole tree, we are guaranteed to have achieved calibration. At this moment all the necessary messages ($\delta$) are now computed and we can compute the beliefs ($\beta$) in each node as the product of the initial potential and all its incomming messages.
+
+The key is that having achieved calibration, the exact marginals of all variables coincide independently on which belief/node we marginalize.
+
+#### Querying the Tree
+
+Once calibrated we can query the tree and extract the probability of any variable assignment.
+
+We are looking for the probability of a certain variable, so we find the first node that holds it, we then marginalize the beta inside that node for all its variables except the one we want. The result of the query is then the probability distribution over that variable (result of the marginalization) or a specific value if we have passed along the assignment we want to infere about.
+
 
 
 

@@ -83,7 +83,7 @@ describe CliqueTree  do
     end
   end
 
-  context '#generate_tree I' do
+  context '#generate_tree_nodes I' do
     it 'creates simple tree' do
       v1 = RandomVar.new(card: 2, name: 'v1')
       v2 = RandomVar.new(card: 2, name: 'v2')
@@ -93,7 +93,7 @@ describe CliqueTree  do
       b = Factor.new(vars: [v2, v1])
       c = Factor.new(vars: [v3, v2, v4])
       ct = CliqueTree.new(a)
-      sepsets = ct.send(:generate_tree, [a, b, c])
+      sepsets = ct.send(:generate_tree_nodes, [a, b, c])
 
       expect(sepsets[0].vars).to include(v2, v1)
       expect(sepsets[1].vars).to include(v2, v3, v4)

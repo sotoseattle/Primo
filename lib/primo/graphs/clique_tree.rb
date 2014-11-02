@@ -3,7 +3,7 @@ class CliqueTree
 
   def initialize(*bunch_o_factors)
     factors = Array(bunch_o_factors)
-    @nodes = generate_tree(factors.map(&:clone))
+    @nodes = generate_tree_nodes(factors.map(&:clone))
     prune_tree
     setup_working_variables
     initialize_potentials(factors)
@@ -14,51 +14,48 @@ class CliqueTree
     nodes.each { |n| compute_belief(n) }
   end
 
-  # Returns probability of variable assignment on calibrated tree
   def query(variable, assignment = nil)
-    n = nodes.find { |n| n.vars.include?(variable) }
-    my_beta = n.bag[:beta].clone.marginalize_all_but(variable)
+    node = nodes.find { |n| n.vars.include?(variable) }
+    my_beta = node.bag[:beta].clone.marginalize_all_but(variable)
     b = my_beta.norm.vals.to_a
-    if assignment
-      return b[variable[assignment]]
-    else
-      return b
-    end
+    assignment ? b[variable[assignment]] : b
   end
 
   private
 
-  # Build a clique tree using variable elimination algorithm.
-  # Returns the set of linked nodes that define the graph
-  def generate_tree(factors_array)
+  def generate_tree_nodes(factors_array)
     tree_nodes = []
-    workip = FactorArray.new(factors_array)
+    wip = FactorArray.new(factors_array)
     markov = InducedMarkov.new(factors_array)
-    tau = nil
+
     while markov.nodes.size > 0
       pick_node = markov.loneliest_node
-      pick_var  = pick_node.vars[0]
-      factors_with_pick = workip.select { |f| f.holds?(pick_var) }
+      pick_var  = pick_node.vars.first
+      factors_with_pick = wip.select { |f| f.holds?(pick_var) }
 
-      if tau = workip.eliminate_variable!(pick_var)
-        # tree: new nodes
-        new_vars = tau.vars + [pick_var]
-        new_node = Node.new(new_vars)
-        new_node.extend(Messenger)
+      if (tau = wip.eliminate_variable!(pick_var))
+        new_node = tree_new_node(tau, pick_var)
         tree_nodes << new_node
-        # tree: new edges
         clique = tree_nodes.select { |n| factors_with_pick.include? n.bag[:tau] }
         link_between(new_node, clique)
 
-        # store the tau in its node
-        new_node.bag[:tau] = tau
-        # modify induced markov for next iteration
-        tau.vars.each { |v| markov.link_all_with(v) }
-        markov.delete!(pick_node)
+        markov = modify_markov(markov, tau, pick_node)
       end
     end
     tau.vars.each { |v| markov.link_all_with(v) }
     tree_nodes
+  end
+
+  def tree_new_node(tau, variable)
+    node = Node.new(tau.vars + [variable]).extend(Messenger)
+    node.bag[:tau] = tau
+    node
+  end
+
+  def modify_markov(markov, tau, node_to_eliminate)
+    tau.vars.each { |v| markov.link_all_with(v) }
+    markov.delete!(node_to_eliminate)
+    markov
   end
 
   def setup_working_variables
@@ -69,7 +66,6 @@ class CliqueTree
     end
   end
 
-  # Associate to each node the product of factors that share variables
   def initialize_potentials(factors_array)
     factors_array.each do |f|
       nn = sort_by_vars.find { |n| (f.vars - n.vars).empty? }
@@ -78,23 +74,18 @@ class CliqueTree
     end
   end
 
-  # Return the complete path (firing messages sequence)
-  # Traversing the tree both ways. Each step = [from_node, to_node]
   def message_path
     forwards = cascade_path
     backwards = forwards.reverse.map(&:reverse)
     (forwards + backwards)
   end
 
-  # Gather incomming messages to the node
-  # Optional, disregard messages from the node we may transmit to
   def incomming_messages(n, silent_node = nil)
     transmitters = n.neighbors.reject { |e| e == silent_node }
     messages = transmitters.map { |m| n.get_message_from(m) }
     messages
   end
 
-  # Compute delta message as cumproduct of potential and incoming messages
   def compute_message(origin, target)
     delta = [origin.bag[:phi]] + incomming_messages(origin, target)
     delta = FactorArray.new(delta).product(true)
@@ -103,7 +94,6 @@ class CliqueTree
     target.save_message_from(origin, delta)
   end
 
-  # Compute beta as cumproduct of potential and incoming messages
   def compute_belief(n)
     beta = [n.bag[:phi]] + incomming_messages(n)
     n.bag[:beta] = FactorArray.new(beta).product(true)
