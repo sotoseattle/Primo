@@ -1,35 +1,29 @@
 require 'narray'
+
 class Factor
-  private
-
-  attr_writer :vars, :vals
-
-  public
-
-  attr_reader :vars, :vals
+  attr_accessor :vars, :vals
 
   def initialize(args)
     args.merge(vals: nil)
     @vars = Array(args[:vars])
+
     @vals = if args[:vals]
               NArray[args[:vals]].reshape!(*cardinalities)
-    else
-      NArray.float(*cardinalities)
-    end
-    fail ArgumentError.new if @vars.empty?
-    fail ArgumentError.new unless @vars.all? { |e| e.class <= RandomVar }
+            else
+              NArray.float(*cardinalities)
+            end
+
+    fail ArgumentError if @vars.any? { |e| !e.is_a?(RandomVar) }
   end
 
-  # isolation ward for calls to RandomVar methods (poodr)
-  def cardinalities(variable_arr = vars)
-    variable_arr.map(&:card)
+  def cardinalities(array_of_variables = vars)
+    array_of_variables.map(&:card)
   end
 
-  def assignment_index(rv, assignment)
-    rv.ass.index(assignment)
+  def assignment_index(random_variable, assignment)
+    random_variable.[](assignment)
   end
 
-  # utility function for results over a CPD
   def [](assignments)
     indices = Array(assignments).each_with_index.map do |s, i|
       assignment_index(vars[i], s)
@@ -37,10 +31,19 @@ class Factor
     vals[*indices]
   end
 
-  # basic operation on two factors (*,+). Resulting factor overwrites caller
-  def modify_in_place(other, &_block)
+  def *(other)
+    other.is_a?(Numeric) ? self.vals *= other : modify_by(other, &:*)
+    self
+  end
+
+  def +(other)
+    other.is_a?(Numeric) ? self.vals += other : modify_by(other, &:+)
+    self
+  end
+
+  def modify_by(other, &_block)
     return self unless other
-    all_vars = [*vars, *other.vars].uniq.sort.reverse
+    all_vars = [*vars, *other.vars].uniq.sort
 
     narr1 = grow_axes(all_vars)
     narr2 = other.grow_axes(all_vars)
@@ -51,33 +54,6 @@ class Factor
     self
   end
 
-  def *(other)
-    if other.is_a? Numeric
-      self.vals = vals * other
-    else
-      modify_in_place(other, &:*)
-    end
-    self
-  end
-
-  def +(other)
-    if other.is_a? Numeric
-      self.vals = vals + other
-    else
-      modify_in_place(other, &:+)
-    end
-    self
-  end
-
-  # normalize values so it adds up to 1
-  def norm
-    cumsum = vals.sum(*(0...vars.size))
-    self.vals = vals / cumsum
-    self
-  end
-
-  # eliminates a dimension / variable by adding along its axis
-  # allows for chaining operations i.e. f1 % v1 % v2
   def marginalize(variable)
     axis_to_marginalize = vars.index(variable)
     if axis_to_marginalize && vars.size > 1
@@ -88,10 +64,9 @@ class Factor
   end
   alias_method :%, :marginalize
 
-  # a faster implementation for a bulk operation
   def marginalize_all_but(variable)
     axis_to_keep = vars.index(variable)
-    fail ArgumentError.new unless axis_to_keep
+    fail ArgumentError unless axis_to_keep
     axes_to_remove = [*(0...vars.size)].reject { |e| e == axis_to_keep }
     axes_to_remove.each_with_index do |axis, i|
       self.vals = vals.sum(axis - i)
@@ -100,8 +75,6 @@ class Factor
     self
   end
 
-  # set values to 0.0 based on observed variables
-  # i.e. if we know color is red, then p(blue)=0.0
   def reduce(evidence)
     observed_index = vars.map do |rv|
       evidence.key?(rv) ? assignment_index(rv, evidence[rv]) : true
@@ -112,8 +85,14 @@ class Factor
     self
   end
 
+  def normalize_values
+    cumsum = vals.sum(*(0...vars.size))
+    self.vals = vals / cumsum
+    self
+  end
+  alias_method :norm, :normalize_values
+
   def to_s
-    # "Factor: [#{vars.map{|e| e.id}.join(', ')}]"
     "Factor: [#{vars.map(&:name).join(', ')}]"
   end
 
@@ -121,7 +100,6 @@ class Factor
     vars.include?(variable)
   end
 
-  # Returns a copy with same vars but all values to 1.0
   def to_ones
     (Factor.new(vars: vars) + 1.0)
   end
@@ -130,11 +108,9 @@ class Factor
     Factor.new(vars: vars.dup, vals: vals.dup)
   end
 
-  protected
-
   # prior to *,+ both factors need to be of equal dimensions
-  # this complicated method grows extra dimensions (axis) according to
-  # var map, copy-pasting in higher dims the values from lower dimensions
+  # this complicated method grows extra dimensions (axis) according to var map,
+  # copying in the new higher dimensions the values from lower dimensions
   def grow_axes(whole_vars)
     return vals.flatten if vars == whole_vars
 
@@ -150,9 +126,7 @@ class Factor
     flat = [vals.flatten] * multiplier
     na = NArray.to_na(flat).reshape!(*vals.shape, *new_cards)
 
-    if new_order != [*(0..whole_vars.size)]
-      na = na.transpose(*new_order)
-    end
+    na = na.transpose(*new_order) if new_order != [*(0..whole_vars.size)]
 
     na.flatten
   end
