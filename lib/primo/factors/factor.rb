@@ -31,8 +31,7 @@ class Factor
     vals[*indices]
   end
 
-  ['*', '+'].each do |op|
-    o = op.to_sym
+  [:*, :+].each do |o|
     define_method(o) do |other|
       other.is_a?(Numeric) ? self.vals = vals.send(o, other) : modify_by(other, &o)
       self

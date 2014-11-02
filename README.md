@@ -145,9 +145,8 @@ And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v
 At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
 
 ```ruby
-['*', '+'].each do |op|
-  o = op.to_sym
-s  define_method(o) do |other|
+[:*, :+].each do |o|
+  define_method(o) do |other|
     other.is_a?(Numeric) ? self.vals = vals.send(o, other) : modify_by(other, &o)
     self
   end
@@ -199,13 +198,11 @@ Factor Array
 
 Just a collection of factors referenced by injection. Inherits from Array and add a couple of utility methods and algorithms applicable to sets of factors:
 
-### product
+- **product**
+    Returns a new factor as the result of multiplying all factors in the array, essentially a reduction by multiplication with optional normalization.
 
-Returns a new factor as the result of multiplying all factors in the array, essentially a reduction by multiplication with optional normalization.
-
-### eliminate_variable!
-
-Variable Elimination Algorithm that modifies all the factors in place by eliminating a selected variable and returns the tau.
+- **eliminate_variable!**
+    Variable Elimination Algorithm that modifies all the factors in place by eliminating a selected variable and returns the tau.
 
 
 Authors
