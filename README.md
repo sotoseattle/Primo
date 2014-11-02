@@ -87,7 +87,7 @@ For example, let's say we have coins, one true and one biased. We declare two ra
 We compute the joint probability table as a factor that holds both variables, so in tabular form we have now 4 different outcomes (possible outcomes) and 4 different values (probabilities of each assignment).
 
 <div style="text-align:center">
-![Factors](public/images/coins.png)
+  <img src="public/images/coins.png" align="center" />
 </div>
 
 So we see that a factor's state includes both
@@ -101,8 +101,9 @@ So we see that a factor's state includes both
 
 We want to eliminate a dimension, (a variable or axis), by adding all values along the eliminated axis. In our coins example, given a factor with two variables (true coin and biased coin), if we now want to marginalized the biased coin we end up with a new factor that only holds the variable of the true coin (A), and whose probabilities are computed adding up probabilities of the eliminated variable.
 
+
 <div style="text-align:center">
-![](public/images/margin_coins.png)
+  <img src="public/images/margin_coins.png" align="center" />
 </div>
 
 We alias the method to the modulus operator `%` for syntactical convenience. This method also allows for chaining operations i.e. f1 % v1 % v2 eliminates in order, first v1 from f1, and then v2 from the resulting factor. Each time % kicks in, f1 is modified in place.
@@ -110,7 +111,8 @@ We alias the method to the modulus operator `%` for syntactical convenience. Thi
 Another example from a multidimensional array perpective. The following factor f1, has only those two random variables (v1, v2), reducing on v2 means selecting the axis for v2 and for each row of v1, adding up all columns of v2.
 
 <div style="text-align:center">
-![](public/images/margin.png)
+coins.png
+  <img src="public/images/margin.png" align="center" />
 </div>
 
 The method marginalize_but is a fast implementation of marginalizing in bulk for all variables in the factor except for one that we want to extract. In this operation we end up with the final probabilities of all assignments for that selected random variable.
@@ -133,13 +135,13 @@ The key methods. Given two factors I modify each one by:
 Continuing with the graphic example, to expand our previous factor (variables v1 and v2) by another variable (v3) we would start with the 2D values along axes v1, v2. Then we add a third dimension for v3.
 
 <div style="text-align:center">
-![](public/images/multiply1.png)
+  <img src="public/images/multiply1.png" align="center" />
 </div>
 
 And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v2 have cardinality 2 and v3 has cardinality 3 so we repeat the 2D matrix twice more along the v3 axis.
 
 <div style="text-align:center">
-![](public/images/multiply2.png)
+  <img src="public/images/multiply2.png" align="center" />
 </div>
 
 At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
@@ -193,9 +195,8 @@ Set values to 0.0 based on observed variables. For example, given a random varia
 In our coins example, if having the joint probability of variables A and B, we know toss the coin B and see that it is heads, we can modify the joint factor to say that since B was heads, every probability of B being tails should be 0.00. This operation modifies the values (making zero impossible outcomes) but still holds both variables.
 
 <div style="text-align:center">
-![](public/images/reduction_coins.png)
+  <img src="public/images/reduction_coins.png" align="center" />
 </div>
-
 
 We modify the NArray values by 1) selecting the observed variable axis and leaving all other axis untouched, and 2) for the selected axis, setting to 0. all cells that are not in the observation column.
 
