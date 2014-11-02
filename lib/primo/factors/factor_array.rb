@@ -14,11 +14,7 @@ class FactorArray < Array
 
   def eliminate_variable!(v)
     tau = nil
-    delete_if do |f|
-      if f.holds?(v)
-        tau ? (tau * f).norm : tau = f
-      end
-    end
+    delete_if { |f| f.holds?(v) && (tau ? (tau * f).norm : tau = f) }
     self << (tau % v) if tau
     tau
   end

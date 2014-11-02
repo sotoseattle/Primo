@@ -9,11 +9,14 @@ describe CliqueTree  do
     let(:a) { Factor.new(vars: [v1], vals: [0.11, 0.89]) }
     let(:b) { Factor.new(vars: [v2, v1], vals: [0.59, 0.41, 0.22, 0.78]) }
     let(:c)do
-      Factor.new(vars: [v3, v2, v4], vals: [0.25, 0.35, 0.08, 0.16, 0.05,
-                                            0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])
+      Factor.new(vars: [v3, v2, v4],
+                 vals: [0.25, 0.35, 0.08, 0.16, 0.05, 0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])
     end
+
     subject { CliqueTree.new(a, b, c) }
+
     it { expect { CliqueTree.new(a, b, c) }.not_to raise_error }
+
     it { is_expected.to respond_to(:nodes) }
 
     it "the node's bag holds potentials, deltas and betas" do
@@ -22,12 +25,14 @@ describe CliqueTree  do
         expect(n).to respond_to(:incoming)
       end
     end
+
     it 'every node has a valid potential' do
       subject.nodes.each do |n|
         expect(n.bag[:phi].class).to eq(Factor)
         expect(n.bag[:phi].vars).to include(*n.vars)
       end
     end
+
     it 'creates simple genetic example tree' do
       g, p = {}, {}
       ff = []
@@ -51,6 +56,7 @@ describe CliqueTree  do
         expect(sepset.bag[:tau]).not_to be
       end
     end
+
     it 'creates complex genetic example tree' do
       names = %w(Robin Ira Rene James Eve Aaron Jason Benito Sandra)
       g, p = {}, {}
@@ -105,13 +111,14 @@ describe CliqueTree  do
     let(:v4) { RandomVar.new(card: 3, name: 'v4') }
     let(:a) { Factor.new(vars: [v1], vals: [0.11, 0.89]) }
     let(:b) { Factor.new(vars: [v2, v1], vals: [0.59, 0.41, 0.22, 0.78]) }
-    let(:c)do
-      Factor.new(vars: [v3, v2, v4], vals: [0.25, 0.35, 0.08, 0.16, 0.05,
-                                            0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])
+    let(:c) do
+      Factor.new(vars: [v3, v2, v4],
+                 vals: [0.25, 0.35, 0.08, 0.16, 0.05, 0.07, 0, 0, 0.15, 0.21, 0.09, 0.18])
     end
     let(:d) { Factor.new(vars: [v1, v4], vals: [0.59, 0.41, 0.22, 0.78, 1.0, 1.0]) }
 
     subject { CliqueTree.new(a, b, c, d) }
+
     it 'marginals from different betas/nodes give the same probability' do
       subject.calibrate
       subject.nodes.each do |pick_node|
@@ -129,5 +136,4 @@ describe CliqueTree  do
       end
     end
   end
-
 end

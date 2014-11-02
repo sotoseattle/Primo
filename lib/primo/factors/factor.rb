@@ -42,7 +42,7 @@ class Factor
     return self unless other
 
     all_vars = [*vars, *other.vars].uniq.sort
-    new_narray = yield(self.grow_axes(all_vars), other.grow_axes(all_vars))
+    new_narray = yield(grow_axes(all_vars), other.grow_axes(all_vars))
 
     self.vars = all_vars
     self.vals = new_narray.reshape!(*cardinalities)
@@ -60,9 +60,9 @@ class Factor
   alias_method :%, :marginalize
 
   def marginalize_all_but(variable)
-    fail ArgumentError unless axis_to_keep = vars.index(variable)
+    fail ArgumentError unless (axis_to_keep = vars.index(variable))
 
-    axes_to_remove = [*(0...vars.size)].reject{ |x| x == axis_to_keep }
+    axes_to_remove = [*(0...vars.size)].reject { |x| x == axis_to_keep }
     axes_to_remove.each_with_index { |axis, i| self.vals = vals.sum(axis - i) }
     self.vars = [variable]
     self

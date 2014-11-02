@@ -20,6 +20,7 @@ describe 'Tree Role' do
         expect { subject.prune_tree }.not_to change { subject.nodes.size }
       end
     end
+
     context "when a node's variables are a subset of another node" do
       it 'case (ABC)--(BC)--(D) => (ABC)--(D)' do
         n1 = subject.add_node(v1, v2, v3)
@@ -33,6 +34,7 @@ describe 'Tree Role' do
         expect(subject.nodes.last.vars.size).to eq(1)
         expect(subject.nodes.last.vars).to include(v4)
       end
+
       it 'case (ABC)--(BC)--(C) => (ABC)' do
         n1 = subject.add_node(v1, v2, v3)
         n2 = subject.add_node(v2, v3)
@@ -43,6 +45,7 @@ describe 'Tree Role' do
         expect(subject.nodes.first.vars.size).to eq(3)
         expect(subject.nodes.first.vars).to include(v1, v2, v3)
       end
+
       it 'case (ABC)--(BC)--(D) & (ABC)--(AB)--(D) => (ABC)--(D)' do
         n1 = subject.add_node(v1, v2, v3)
         n2 = subject.add_node(v2, v3)

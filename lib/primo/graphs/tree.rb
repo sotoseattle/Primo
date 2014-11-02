@@ -1,33 +1,19 @@
-# Role of Tree, additional methods for an specific graph.
-
 module Tree
   include Graph
 
-  # Returns a leaf in a tree
   def leaf
     nodes.first { |n| n.neighbors.size == 1 }
   end
 
-  # Removes nodes whose variables are a subset of another node and
-  # relinks the superset with the subset's neighbors
   def prune_tree
-    go_on = true
-    while go_on
-      go_on = false
-      nodes.each do |n|
-        neighbor = n.neighbors.find { |m| (n.vars - m.vars).empty? }
-        if neighbor
-          link_between(neighbor, n.neighbors)
-          delete!(n)
-          go_on = true
-          break
-        end
+    neighbor = true
+    while neighbor
+      nodes.find do |node|
+        bridge(neighbor, node) if (neighbor = subset_of?(node))
       end
     end
   end
 
-  # Return a message path where each nodes fires only after all neighbors
-  # have passed messages. Based on the discovery path of Breadth First Search
   def cascade_path
     discovery_bfs_path = breadth_first_search_path(leaf)
     marked = Hash.new(false)
@@ -38,5 +24,16 @@ module Tree
     end
     path.pop
     path
+  end
+
+  private
+
+  def subset_of?(n)
+    n.neighbors.find { |m| (n.vars - m.vars).empty? }
+  end
+
+  def bridge(super_set_node, sub_set_node)
+    link_between(super_set_node, sub_set_node.neighbors)
+    delete!(sub_set_node)
   end
 end

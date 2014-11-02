@@ -137,6 +137,8 @@ Let's begin by saying that like the previous operations these methods:
 - override the common operators (* == multiply factors, + == add factors)
 - returns itself so we can chain operations (f1 * f2 * f3)
 
+Although not very syntactically proper, the design decision of writing f1 * f2 as a bang method and modifying f1 in place makes sense in terms of clarity and speed when we later operate multiple times on large sets of factors.
+
 The key methods. Given two factors I modify each one by:
 
 - gathering all the variables of the resulting multiplication factor (union of all sorted variables)
@@ -224,6 +226,59 @@ Just a collection of factors referenced by injection. Inherits from Array and ad
 
 - **eliminate_variable!**
     Variable Elimination Algorithm that modifies all the factors in place by eliminating a selected variable. It adds the resulting tau to the end of the factor array as another factor, and returns the tau back.
+
+Node
+----
+
+The Node is the prototypical graph node that holds:
+
+- a set of random variables in the `@vars` array
+- a set of connected nodes in a `@neighbors` array
+- a versatile hash for keeping other information, the `@bag`
+
+The public methods called on Nodes are run-of-the-mill:
+
+- `connect` to another node,
+- detach from a graph with `isolate` and `isolate?`
+- compute the size as the product of cardinalities of its variables (`weight`)
+
+Graph
+-----
+
+Refers to an Undirected Graph and it is coded as a module so Objects can adopt behaviors typical of undirected graphs.
+
+Although being a module, it holds by injection a reference to the collection of nodes that form the graph. Also, although the graph coordinates the edges between nodes, it is the node itself the one who knows who he is linked to and actually creates the edge.
+
+Some of the methods included:
+
+- `add_neighbors` or its alias `make_clique` connects with edge two nodes, or multiple nodes as a clique
+- `link_between`  connects node to a bunch of others (but not among themselves)
+- `link_all_with` makes a clique of all nodes that share a certain variable
+- `loneliest_node` returns the node with the least neighbors, useful for min-neighbors algorithm
+- `thinnest_node` returns the node with the least cumulative cardinality, useful for min-weight algorithm
+- `breadth_first_search_path` Breadth First Search algorithm, returns the path, useful for belief propagation algorithm
+
+Tree
+----
+
+Another module that adds to the Graph another bunch of useful methods that apply solely to trees (undirected graphs without loops).
+
+- `leaf` returns the first leaf available in a tree
+- `prune` compacts the of nodes in the tree by removing those nodes whose variables are a subset of another node, and re-linking the superset with the subset's neighbors.
+  For example, for a simple tree in the form: (ABC)--(BC)--(D), where the A,B,C,D are random variables, () denotes a node and -- an edge. The node (BC) is a subset of (ABC) same so we can compact the tree as => (ABC)--(D)
+- `cascade_path` return a message path where each nodes fires only after all neighbors have passed messages. It relies on the discovery path found and returned by the Graph's Breadth First Search.
+
+Induced Markov
+--------------
+
+Induced Markov Network is an undirected graph where each node holds a single random variable. It can be created from a set of factors where two nodes become connected if the variables they hold show up together in a factor. Alternatively it can be seen as being created by `moralizing' the Graph derived from a Bayesian Network.
+
+It is used as an intermediary process to create a clique tree from a set of factors.
+
+Clique Tree
+-----------
+
+
 
 
 Authors

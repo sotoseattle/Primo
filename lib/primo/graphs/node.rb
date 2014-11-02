@@ -9,18 +9,18 @@ class Node
   attr_reader :vars, :neighbors
 
   def initialize(*variables)
-    @vars  = Array(variables).flatten.uniq.sort # is sort needed?
+    @vars  = Array(variables).flatten.uniq.sort
     @neighbors = []
     @bag = {}
+
     fail ArgumentError if vars.empty?
   end
 
   def connect(other)
-    return if other == self
-    unless neighbors.include?(other)
-      neighbors  << other
-      other.neighbors << self
-    end
+    return if other == self || neighbors.include?(other)
+
+    neighbors  << other
+    other.neighbors << self
   end
 
   def isolate!

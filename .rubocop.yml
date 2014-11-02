@@ -2,7 +2,7 @@ Documentation:
   Enabled: false
 
 LineLength:
-  Max: 80
+  Max: 90
 
 AllCops:
   RunRailsCops: true
@@ -11,4 +11,4 @@ AllCops:
     - lib/tasks/*
 
 Metrics/MethodLength:
-  Max: 12
+  Max: 15

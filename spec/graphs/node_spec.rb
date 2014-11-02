@@ -8,6 +8,8 @@ describe Node  do
   context '#initialize' do
     context 'without variables' do
       it { expect { Node.new }.to raise_error(ArgumentError) }
+
+      it { expect { Node.new([]) }.to raise_error(ArgumentError) }
     end
 
     context 'with proper variables' do
