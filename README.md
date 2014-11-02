@@ -1,8 +1,208 @@
 PRIMO
 ====
 
-### Probabilistic Inference Modelling with Ruby
+## Probabilistic Inference Modelling with Ruby
 
-Coding in Ruby examples from "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm).
+[]()
 
-Developing...
+Table of Contents
+=================
+
+- [Primo]()
+- [Table of Contents](#table-of-contents)
+- [Install](#install)
+- [Intro](#intro)
+- [API](#api)
+    - [Random Variables](#random-variables)
+    - [Factors](#factors)
+- [Examples]()
+    - [Genetic Network]()
+
+Install
+=======
+
+It works in Ruby 2.1.2
+The main dependency is the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), version 0.6.
+The test are written for RSpec 3.1.2.
+
+Intro
+=====
+
+In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex, difficult but a lot of fun because of all the possibilities it opened up for me. This gem is a liberal translation of the code I worked with in Octave througout the course.
+
+I have decided to code in Ruby instead of Python (for which I had a previous version) because Ruby is more flexible when building prototypes. The apps that I would like to build around ML are like cars. The engine may be a key component and its performance paramount, but there is more to a car than its engine. These apps will be more than its inference engine, and in all those other aspects Ruby shines. If I was obsessed only with the engine I would have code it in Julia or C, but I am in this for the fun and the possibilities, and Ruby is a pleasure to play with.
+
+Besides, what I have already coded in Ruby is already faster than my Python code (which shows what a beginner I am in Python). The key to the performance boost has been the use of the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), which allows me to, for example, multiply two multidimensional arrays element wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
+
+I have christened this working library PRIMO (Probabilistic Inference Modeling) because in Spanish it means either prime, first, cousin or dumb! :)
+
+API
+===
+
+Random Variables
+----------------
+
+The essential building block of Primo, similar to Nodes in graphs, each holds the following instance variables:
+
+- **cardinality**. For example, a binary variable that can only take two values (true-false, 0-1) and therefore it has a cardinality of 2. The roll of a dice would have cardinality of 6, because the the outcome can take 6 different values: 1, 2, 3, 4, 5 or 6.
+- **ass** (assignments). An ordered array with all the possible assignments. If no assignments are given it uses integers starting from 0. The previous dice roll would have an ass of [0, 1, 2, 3, 4, 5]; a binary variable would have an ass of [0, 1]. We can also make a binary random variable for the health of a patient with the assignment array ['healthy', 'sick'].
+- **name**. Just a name to make it easier to identify the variable.
+
+An important detail is how we define the <=> operator because we will be comparing between random variables based on their internal object ids. This is necessary because later on, when we multiply sets of variables, we will do it according to their order. The order itself doesn't matter, all we'll need is that there is a way to order them in a stable, immutable and persistent way.
+
+```ruby
+  def initialize(args)
+    args.merge(name: '', ass: nil)
+
+    @card = args[:card].to_i
+    @name = args[:name].to_s
+    @ass = args[:ass] ? Array(args[:ass]) : [*0...@card]
+
+    fail ArgumentError if @card == 0 || @ass.size != @card
+  end
+
+  def <=>(other)
+    object_id <=> other.object_id
+  end
+
+  def [](assignment)
+    ass.index(assignment)
+  end
+
+  def to_s
+    "#{name}"
+  end
+end
+```
+
+Factors
+-------
+
+The best way to visualize a Factor is in terms of an n-dimensional matrix. Each dimension (or axis) corresponds to a random variable. These variables are held in the `@vars` instance variable.
+
+Each axis has as many possible values as its cardinality. A Factor made of two binary variables (x, y) will be similar to a 2x2 matrix.
+
+For example, given two random variables that represent the toss of a coin, both being binary (head or tails) would give us the following factor:
+
+|-----|-----|------|
+|     |head |tails |
+|-----|-----|------|
+|head | p(h & h)| p(h & t)|
+|tails| p(t & h)| p(t & t)|
+|-----|-----|------|
+{:.widetable}
+
+<br/>
+
+In tabular form we have:
+
+
+|--------|-------------|
+|outcome | probability |
+|--------|-------------|
+|head & head | p(h & h) |
+|head & tail | p(h & t) |
+|tail & head | p(t & h) |
+|tail & tail | p(t & t) |
+|--------|-------------|
+{:.widetable}
+
+<br/>
+
+So apart from the variables it holds, the Factor also keeps track of the values of all possible outcomes, the `@vals`. These will be the probabilities of the outcomes in most cases.
+
+Now, the vars are kept in an array, and the vals are stored in an N-array, a multidimensional array, where each dimension correspond to a random variable.
+
+### Operations
+
+#### Marginalization
+
+We want to eliminate a dimension, (a variable or axis), by adding all values along the eliminated axis. We alias the method to the modulus operator `%` for syntactical convenience.
+
+It allows for chaining operations i.e. f1 % v1 % v2 eliminates in order, first v1 from f1, and then v2 from the resulting factor. Each time % kicks in, f1 is modified in place.
+
+If for example, the factor f1, has only those two random variables (v1, v2), reducing on v2 means selecting the axis for v2 and for each row of v1, adding up all columns of v2.
+
+{% img center /images/nov13/margin.png %}
+
+The method marginalize_but is a fast implementation of marginalizing in bulk for all variables in the factor except for one that we want to extract. In this operation we end up with the final probabilities of all assignments for that selected random variable.
+
+#### Multiplication and Addition
+
+Let's begin by saying that like the previous operations these methods:
+
+- modify the first element ( a * b => a is changed)
+- allow multiplying/adding by number (elementwise) or factor
+- override the common operators (* == multiply factors, + == add factors)
+- returns itself so we can chain operations (f1 * f2 * f3)
+
+The key methods. Given two factors I modify each one by:
+
+- gathering all the variables of the resulting multiplication factor (union of all sorted variables)
+- inserting new axis in each factor for each new variable that it doesn't have. This way both factors will have the same axes, in the same order (by the way, this is the reason why we needed a way to sort random variables by id). This is accomplished with simple rotations of the NArray.
+- expanding the values ndarray on each new axis by simply repeating existing values a number of times equal to the cardinality of the axi's variable.
+
+Continuing with the graphic example, to expand our previous factor (variables v1 and v2) by another variable (v3) we would start with the 2D values along axes v1, v2. Then we add a third dimension for v3.
+
+{% img center /images/nov13/multiply1.png %}
+
+And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v2 have cardinality 2 and v3 has cardinality 3 so we repeat the 2D matrix twice more along the v3 axis.
+
+{% img center /images/nov13/multiply2.png %}
+
+At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
+
+```ruby Factor Multiplication & Addition
+def *(other)
+  other.is_a? Numeric ? self.vals = vals * other : modify_by(other, &:*)
+  self
+end
+
+def +(other)
+  other.is_a? Numeric ? self.vals = vals + other : modify_by(other, &:+)
+  self
+end
+
+def modify_by(other, &_block)
+  return self unless other
+  all_vars = [*vars, *other.vars].uniq.sort
+
+  narr1 = grow_axes(all_vars)
+  narr2 = other.grow_axes(all_vars)
+  na = yield narr1, narr2
+
+  self.vars = all_vars
+  self.vals = na.reshape!(*cardinalities)
+  self
+end
+
+def grow_axes(whole_vars)
+  return vals.flatten if vars == whole_vars
+
+  multiplier = 1.0
+  new_vars = whole_vars.reject { |rv| vars.include?(rv) }
+
+  old_order_vars = [*vars, *new_vars]
+  new_order = whole_vars.map { |e| old_order_vars.index(e) }
+
+  new_cards = cardinalities(new_vars)
+  multiplier = new_cards.reduce(multiplier, :*)
+
+  flat = [vals.flatten] * multiplier
+  na = NArray.to_na(flat).reshape!(*vals.shape, *new_cards)
+
+  if new_order != [*(0..whole_vars.size)]
+    na = na.transpose(*new_order)
+  end
+
+  na.flatten
+end
+```
+
+#### Reduction
+
+Set values to 0.0 based on observed variables. For example, given a random variable of color that can only take two possible values (red, blue).i If we know that the color is red, then p(blue)=0.0.
+
+
+We modify the NArray values by 1) selecting the observed variable axis and leaving all other axis untouched, and 2) for the selected axis, setting to 0. all cells that are not in the observation column.
+
