@@ -17,8 +17,8 @@ class CliqueTree
   def query(variable, assignment = nil)
     node = nodes.find { |n| n.vars.include?(variable) }
     my_beta = node.bag[:beta].clone.marginalize_all_but(variable)
-    b = my_beta.norm.vals.to_a
-    assignment ? b[variable[assignment]] : b
+    prob_dist = my_beta.norm.vals.to_a
+    assignment ? prob_dist[variable[assignment]] : prob_dist
   end
 
   private

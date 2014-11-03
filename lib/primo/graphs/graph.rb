@@ -18,16 +18,12 @@ module Graph
   end
 
   def add_neighbors(*bunch_o_nodes)
-    Array(bunch_o_nodes.flatten).combination(2).each do |node_pair|
-      node_pair[0].connect(node_pair[1])
-    end
+    Array(bunch_o_nodes.flatten).combination(2).each { |n1, n2| n1.connect(n2) }
   end
   alias_method :make_clique, :add_neighbors
 
   def link_between(node, *bunch_o_nodes)
-    Array(bunch_o_nodes.flatten).each do |n|
-      add_neighbors(node, n)
-    end
+    Array(bunch_o_nodes.flatten).each { |n| add_neighbors(node, n) }
   end
 
   def link_all_with(v)

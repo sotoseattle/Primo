@@ -79,24 +79,6 @@ The essential building block of Primo, each holds the following instance variabl
 
 An important detail is how we define the <=> operator, which compares random variables based on their internal object ids. This is necessary because later on, when we multiply sets of variables, we will do it according to their order. The order itself doesn't matter, all we'll need is that there is a way to order them in a stable, immutable and persistent way.
 
-```ruby
-  def initialize(args)
-    args.merge(name: '', ass: nil)
-
-    @card = args[:card].to_i
-    @name = args[:name].to_s
-    @ass = args[:ass] ? Array(args[:ass]) : [*0...@card]
-
-    fail ArgumentError if @card == 0 || @ass.size != @card
-  end
-
-  def <=>(other)
-    object_id <=> other.object_id
-  end
-  ...
-end
-```
-
 Factor
 -------
 
@@ -114,7 +96,6 @@ We compute the joint probability table as a factor that holds both variables, so
 <p align="center">
   <img src="public/images/coins.png" />
 </p>
-<br>
 
 So we see that a factor's state includes both
 
@@ -131,7 +112,6 @@ Marginalization is about eliminating a dimension, (a variable or axis), of the F
 <p align="center">
   <img src="public/images/margin_coins.png" />
 </p>
-<br>
 
 We alias the method to the modulus operator `%` for syntactical convenience. This method also allows for chaining operations i.e. f1 % v1 % v2 eliminates in order, first v1 from f1, and then v2 from the resulting factor. Each time % kicks in, f1 is modified in place.
 
@@ -140,7 +120,6 @@ Another example from a multidimensional array perpective. The following factor f
 <p align="center">
   <img src="public/images/margin.png" />
 </p>
-<br>
 
 The method marginalize_but is a fast implementation of marginalizing in bulk for all variables in the factor except for one that we want to extract. In this operation we end up with the final probabilities of all assignments for that selected random variable.
 
@@ -166,18 +145,17 @@ Continuing with the graphic example, to expand our previous factor (variables v1
 <p align="center">
   <img src="public/images/multiply1.png"/>
 </p>
-<br>
 
 And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v2 have cardinality 2 and v3 has cardinality 3 so we repeat the 2D matrix twice more along the v3 axis.
 
 <p align="center">
   <img src="public/images/multiply2.png"/>
 </p>
-<br>
 
 At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
 
 ```ruby
+# factor.rb
 [:*, :+].each do |o|
   define_method(o) do |other|
     other.is_a?(Numeric) ? self.vals = vals.send(o, other) : modify_by(other, &o)
@@ -228,7 +206,6 @@ In our coins example, if having the joint probability of variables A and B, we k
 <p align="center">
   <img src="public/images/reduction_coins.png" />
 </p>
-<br>
 
 We modify the NArray values by 1) selecting the observed variable axis and leaving all other axis untouched, and 2) for the selected axis, setting to 0. all cells that are not in the observation column.
 
@@ -275,6 +252,23 @@ Some of the methods included:
 - `thinnest_node` returns the node with the least cumulative cardinality, useful for min-weight algorithm
 - `breadth_first_search_path` Breadth First Search algorithm, returns the path, useful for belief propagation algorithm
 
+```ruby
+# graph.rb
+def add_neighbors(*bunch_o_nodes)
+  Array(bunch_o_nodes.flatten).combination(2).each { |n1, n2| n1.connect(n2) }
+end
+alias_method :make_clique, :add_neighbors
+
+def link_between(node, *bunch_o_nodes)
+  Array(bunch_o_nodes.flatten).each { |n| add_neighbors(node, n) }
+end
+
+def link_all_with(v)
+  clique = nodes.select { |n| n.vars.include?(v) }
+  add_neighbors(clique)
+end
+```
+
 Tree
 ----
 
@@ -285,12 +279,38 @@ Another module that adds to the Graph another bunch of useful methods that apply
   For example, for a simple tree in the form: (ABC)--(BC)--(D), where the A,B,C,D are random variables, () denotes a node and -- an edge. The node (BC) is a subset of (ABC) same so we can compact the tree as => (ABC)--(D)
 - `cascade_path` return a message path where each nodes fires only after all neighbors have passed messages. It relies on the discovery path found and returned by the Graph's Breadth First Search.
 
+```ruby
+# tree.rb
+def prune_tree
+  neighbor = true
+  while neighbor
+    nodes.find do |node|
+      bridge(neighbor, node) if (neighbor = subset_of?(node))
+    end
+  end
+end
+```
+
 Induced Markov
 --------------
 
 Induced Markov Network is an undirected graph where each node holds a single random variable. It can be created from a set of factors where two nodes become connected if the variables they hold show up together in a factor. Alternatively it can be seen as being created by `moralizing' the Graph derived from a Bayesian Network.
 
 It is used as an intermediary process to create a clique tree from a set of factors.
+
+```ruby
+# induced_markov.rb
+def initialize(*bunch_o_factors)
+  @factors = Array(bunch_o_factors.flatten)
+  fail ArgumentError if factors.empty?
+
+  h = {}
+  factors.each do |f|
+    to_connect = f.vars.reduce([]) { |a, e| a << (h[e] ||= add_node(e)) }
+    make_clique(to_connect)
+  end
+end
+```
 
 Clique Tree
 -----------
@@ -355,14 +375,12 @@ For example, the following Pairwise Markov Grid...
 <p align="center">
   <img src="public/images/toy_grid.png" />
 </piv>
-<br>
 
 ... would create the following clique tree through variable elimination.
 
 <p align="center">
   <img src="public/images/ct_toy_grid.png" />
 </p>
-<br>
 
 
 #### Pruning the Tree
@@ -399,12 +417,29 @@ After just two passes, once forward and once backwards throughout the whole tree
 
 The key is that having achieved calibration, the exact marginals of all variables coincide independently on which belief/node we marginalize.
 
+```ruby
+# clique_tree.rb
+def calibrate
+  message_path.each { |step| compute_message(*step) }
+  nodes.each { |n| compute_belief(n) }
+end
+```
+
 #### Querying the Tree
 
 Once calibrated we can query the tree and extract the probability of any variable assignment.
 
 We are looking for the probability of a certain variable, so we find the first node that holds it, we then marginalize the beta inside that node for all its variables except the one we want. The result of the query is then the probability distribution over that variable (result of the marginalization) or a specific value if we have passed along the assignment we want to infere about.
 
+```ruby
+# clique_tree.rb
+def query(variable, assignment = nil)
+  node = nodes.find { |n| n.vars.include?(variable) }
+  my_beta = node.bag[:beta].clone.marginalize_all_but(variable)
+  prob_dist = my_beta.norm.vals.to_a
+  assignment ? prob_dist[variable[assignment]] : prob_dist
+end
+```
 
 Genetic Examples
 ================
@@ -421,11 +456,11 @@ Given a family tree, for each member of the family we are going to have two node
 <p align="center">
   <img src="public/images/template.png" width="350"/>
 </p>
-<br>
 
 Where the random variables correspond to:
 
 ```ruby
+# vars.rb
 class Phenotype < RandomVar
   def initialize(name)
     super(card: 2, name: name, ass: %w(present absent))
@@ -442,6 +477,7 @@ end
 And our coded example (cystic_fib_joint_cpd.rb) has the following family tree and set of linked variables.
 
 ```ruby
+# cystic_fib_joint_cpd.rb
 smiths = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito))
 
 simths['James'].son_of(simths['Ira'], simths['Robin'])
@@ -456,7 +492,6 @@ smiths.compute_factors
 <p align="center">
   <img src="public/images/cysticBN.png" />
 </p>
-<br>
 
 I will build the factors that bind these variables depending on what genes are inherited and the probabilities of finding them in the general population. Check [here](http://localhost:4000/blog/2013/11/03/Genetic-BN/) to see how exactly I did it.
 
@@ -489,11 +524,11 @@ The associated clique tree is similar to the following image. All potentials (fa
 <p align="center">
   <img src="public/images/cystic_BN_clique.png" />
 </p>
-<br>
 
 We only need to create and calibrate the tree given the factors:
 
 ```ruby
+# cystic_fib_clique_tree.rb
 clique_tree = CliqueTree.new(*all_factors)
 clique_tree.calibrate
 ```
@@ -512,14 +547,12 @@ In the same manner we can use Clique Trees to compute the example on cystic_fib_
 <p align="center">
   <img src="public/images/decoup_cysticBN.png" />
 </p>
-<br>
 
 And the Clique Tree that results is still very small and easy to traverse.
 
 <p align="center">
   <img src="public/images/cystic_decoup_BN_clique.png" />
 </p>
-<br>
 
 You can imagine that as we add people, variables and nodes, the only sane way to go about is with Clique Trees. This gem provides the tools to create complex inference based on Bayesian Networks.
 
