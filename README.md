@@ -23,7 +23,6 @@ Table of Contents
 - [Primo](#primo)
 - [Table of Contents](#table-of-contents)
 - [Install](#install)
-- [Intro](#intro)
 - [API](#api)
     - [Random Variable](#random-variables)
     - [Factor](#factor)
