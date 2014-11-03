@@ -10,7 +10,9 @@ PRIMO
 
 
 In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex and difficult, but a lot of fun because of all the possibilities it opens up. This gem is a liberal translation of the code I worked with in Octave throughout the course, and which later I coded in python to learn the language.
+
 <img src="public/images/dice.png" width="300px" align="right"/>
+
 I have decided to code in Ruby instead of Python for two reasons: i) Ruby is specially flexible when building prototypes and ii) the apps that I would like to build around this inference engine will require a flexibility and abilities beyond computational performance. If I was obsessed only with the engine per-se I would code it in Julia or C, but I am in this for the fun and the possibilities, and besides all reasons, Ruby is just a pleasure to play with.
 
 Sincere thanks to Masahiro Tanaka for his wonderful [NArray gem](http://masa16.github.io/narray/), which allows me to, for example, multiply two multi-dimensional arrays element-wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
