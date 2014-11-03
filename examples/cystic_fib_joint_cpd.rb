@@ -35,7 +35,7 @@ class Person
   def compute_factors
     self.factor = phen_probabistic(PHENO_STATS)
     factor * ((dad && mom) ? gen_parental : gen_probabilistic(GEN_STATS))
-    factor.norm
+    factor.normalize_values
   end
 
   def phen_probabistic(stats)
@@ -48,18 +48,17 @@ class Person
   end
 
   def gen_parental
-    vals = [[[1.0, 0.0, 0.0], [0.5, 0.5, 0.0],   [0.0, 1.0, 0.0]],
-            [[0.5, 0.5, 0.0], [0.25, 0.5, 0.25], [0.0, 0.5, 0.5]],
-            [[0.0, 1.0, 0.0], [0.0, 0.5, 0.5],   [0.0, 0.0, 1.0]]]
+    vals = [1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 0.25, 0.5,
+            0.25, 0.0, 0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0]
     Factor.new(vars: [gen, dad.gen, mom.gen], vals: vals)
   end
 
   def observe_pheno(ass)
-    factor.reduce(phn => ass).norm
+    factor.reduce(phn => ass).normalize_values
   end
 
   def observe_gen(ass)
-    factor.reduce(gen => ass).norm
+    factor.reduce(gen => ass).normalize_values
   end
 end
 
@@ -67,23 +66,23 @@ end
 #########################   TESTING   ##############################
 ####################################################################
 
-a = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito))
+smiths = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito))
 
-a['James'].son_of(a['Ira'], a['Robin'])
-a['Eva'].son_of(a['Ira'], a['Robin'])
-a['Sandra'].son_of(a['Aaron'], a['Eva'])
-a['Jason'].son_of(a['James'], a['Rene'])
-a['Benito'].son_of(a['James'], a['Rene'])
+smiths['James'].son_of(smiths['Ira'], smiths['Robin'])
+smiths['Eva'].son_of(smiths['Ira'], smiths['Robin'])
+smiths['Sandra'].son_of(smiths['Aaron'], smiths['Eva'])
+smiths['Jason'].son_of(smiths['James'], smiths['Rene'])
+smiths['Benito'].son_of(smiths['James'], smiths['Rene'])
 
-a.compute_factors
+smiths.compute_factors
 
-a['Ira'].observe_pheno('present')
-a['James'].observe_gen('Ff')
-a['Rene'].observe_gen('FF')
+smiths['Ira'].observe_pheno('present')
+smiths['James'].observe_gen('Ff')
+smiths['Rene'].observe_gen('FF')
 
-cpd = a.compute_whole_joint
-cpd.marginalize_all_but(a['Benito'].phn)
-puts "Probability of Benito showing illness: #{cpd['present']}"
+super_joint_table = smiths.compute_whole_joint
+super_joint_table.marginalize_all_but(smiths['Benito'].phn)
+puts "Probability of Benito showing illness: #{super_joint_table['present']}"
 
 # no reductions      => P(Benito ill present) == 0.197
 # only Ira reduction => P(Benito ill present) == 0.2474593908629386

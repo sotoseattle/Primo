@@ -17,16 +17,14 @@ class Person
   end
 
   def son_of(parent_1, parent_2)
-    na = [1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0, 0.0, 0.5,
-          0.5, 0.0, 0.25, 0.5, 0.25, 0.0, 0.5, 0.5, 0.0, 1.0,
-          0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0]
-    @f_geno = Factor.new(vars: [geno, parent_1.geno, parent_2.geno], vals: na)
+    @f_geno = Factor.new(vars: [geno, parent_1.geno, parent_2.geno],
+                         vals: Genotype::HardCodedValues)
   end
 
   def observe(ass, var_type)
-    rv = instance_variable_get("@#{var_type}")
-    f = instance_variable_get("@f_#{var_type}")
-    f.reduce(rv => ass).norm
+    random_var = instance_variable_get("@#{var_type}")
+    factor = instance_variable_get("@f_#{var_type}")
+    factor.reduce(random_var => ass).normalize_values
   end
 end
 
@@ -34,14 +32,14 @@ class CTFamily < Family
   attr_accessor :clique_tree
 
   def setup
-    all_factors = members.map { |p| [p.f_phen, p.f_geno] }.flatten
-    self.clique_tree = CliqueTree.new(*all_factors)
+    all_factors = members.map { |person| [person.f_phen, person.f_geno] }.flatten
+    @clique_tree = CliqueTree.new(*all_factors)
     clique_tree.calibrate
   end
 
   def prob_sick(name)
-    rv = self[name].phen
-    100 * clique_tree.query(rv, 'present')
+    random_var = self[name].phen
+    100 * clique_tree.query(random_var, 'present')
   end
 end
 
@@ -49,27 +47,27 @@ end
 #########################   TESTING   ##############################
 ####################################################################
 
-a = CTFamily.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito Pepe
-                    Juan Margarita))
+smiths = CTFamily.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason
+                         Benito Pepe Juan Margarita))
 
-a['James'].son_of(a['Ira'], a['Robin'])
-a['Eva'].son_of(a['Ira'], a['Robin'])
-a['Sandra'].son_of(a['Aaron'], a['Eva'])
-a['Jason'].son_of(a['James'], a['Rene'])
-a['Benito'].son_of(a['James'], a['Rene'])
+smiths['James'].son_of(smiths['Ira'], smiths['Robin'])
+smiths['Eva'].son_of(smiths['Ira'], smiths['Robin'])
+smiths['Sandra'].son_of(smiths['Aaron'], smiths['Eva'])
+smiths['Jason'].son_of(smiths['James'], smiths['Rene'])
+smiths['Benito'].son_of(smiths['James'], smiths['Rene'])
 
-a['Pepe'].son_of(a['James'], a['Sandra'])
-a['Juan'].son_of(a['Aaron'], a['Eva'])
-a['Margarita'].son_of(a['Juan'], a['Pepe'])
+smiths['Pepe'].son_of(smiths['James'], smiths['Sandra'])
+smiths['Juan'].son_of(smiths['Aaron'], smiths['Eva'])
+smiths['Margarita'].son_of(smiths['Juan'], smiths['Pepe'])
 
-a['Ira'].observe('present', 'phen')
-a['James'].observe('Ff', 'geno')
-a['Rene'].observe('FF', 'geno')
+smiths['Ira'].observe('present', 'phen')
+smiths['James'].observe('Ff', 'geno')
+smiths['Rene'].observe('FF', 'geno')
 
-a.setup
+smiths.setup
 
 %w(Ira Robin Aaron Rene James Eva Sandra Jason Benito).each do |name|
-  puts "#{name} p(showing illness) = #{a.prob_sick(name)}%"
+  puts "#{name} p(showing illness) = #{smiths.prob_sick(name)}%"
 end
 
 # no reductions      => P(Benito ill present) == 0.197

@@ -14,7 +14,6 @@ Table of Contents
 - [Primo](#primo)
 - [Table of Contents](#table-of-contents)
 - [Install](#install)
-- [Usage](#usage)
 - [Intro](#intro)
 - [API](#api)
     - [Random Variable](#random-variables)
@@ -38,14 +37,9 @@ Clone the git repo from github, move to the cloned root directory and install:
 gem install ./soto-primo-0.0.1.gem
 ```
 
-It works in Ruby 2.1.2.
-
-The main dependency is the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), version 0.6.
-
-The test are written for RSpec 3.1.2.
-
-Usage
-=====
+- It works with Ruby 2.1.2.
+- The main dependency is the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), version 0.6.
+- The test are written for RSpec 3.1.2.
 
 To use it in your code add to your Gemfile:
 

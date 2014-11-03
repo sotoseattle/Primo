@@ -5,6 +5,9 @@ class Phenotype < RandomVar
 end
 
 class Genotype < RandomVar
+  HardCodedValues = [1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5,
+                     0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0,
+                     0.5, 0.5, 0.0, 0.0, 1.0]
   def initialize(name)
     super(card: 3, name: name, ass: %w(FF Ff ff))
   end
