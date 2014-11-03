@@ -32,7 +32,7 @@ Table of Contents
     - [Tree](#tree)
     - [Induced Markov](#induced-markov)
     - [Clique Tree](#clique-tree)
-- [Examples on Genetic Bayesian Network](examples on genetic bayesian network)
+- [Genetic Examples](#genetic examples)
 - [Authors](#authors)
 - [License](#license)
 
@@ -406,8 +406,8 @@ Once calibrated we can query the tree and extract the probability of any variabl
 We are looking for the probability of a certain variable, so we find the first node that holds it, we then marginalize the beta inside that node for all its variables except the one we want. The result of the query is then the probability distribution over that variable (result of the marginalization) or a specific value if we have passed along the assignment we want to infere about.
 
 
-Examples on Genetic Bayesian Network
-====================================
+Genetic Examples
+================
 
 Included are some examples of Bayesian Genetic Networks and how to compute the probability of specific persons showing a specific phenotype given the family history and genetic observations.
 
