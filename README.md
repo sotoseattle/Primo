@@ -32,7 +32,7 @@ Table of Contents
     - [Tree](#tree)
     - [Induced Markov](#induced-markov)
     - [Clique Tree](#clique-tree)
-- [Genetic Examples](#genetic examples)
+- [Genetic Examples](#genetic-examples)
 - [Authors](#authors)
 - [License](#license)
 
