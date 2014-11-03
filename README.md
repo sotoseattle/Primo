@@ -24,15 +24,15 @@ Table of Contents
 - [Table of Contents](#table-of-contents)
 - [Install](#install)
 - [API](#api)
-    - [Random Variable](#random-variables)
+    - [Random Variable](#random-variable)
     - [Factor](#factor)
     - [Factor Array](#factor-array)
     - [Node](#node)
-    - [Graph](#Graph)
-    - [Tree](#Tree)
+    - [Graph](#graph)
+    - [Tree](#tree)
     - [Induced Markov](#induced-markov)
     - [Clique Tree](#clique-tree)
-- [Examples](examples)
+- [Examples on Genetic Bayesian Network](examples on genetic bayesian network)
 - [Authors](#authors)
 - [License](#license)
 
@@ -256,6 +256,7 @@ The public methods called on Nodes are run-of-the-mill:
 - detach from a graph with `isolate` and `isolate?`
 - compute the size as the product of cardinalities of its variables (`weight`)
 
+
 Graph
 -----
 
@@ -404,8 +405,9 @@ Once calibrated we can query the tree and extract the probability of any variabl
 
 We are looking for the probability of a certain variable, so we find the first node that holds it, we then marginalize the beta inside that node for all its variables except the one we want. The result of the query is then the probability distribution over that variable (result of the marginalization) or a specific value if we have passed along the assignment we want to infere about.
 
-Examples
-========
+
+Examples on Genetic Bayesian Network
+====================================
 
 Included are some examples of Bayesian Genetic Networks and how to compute the probability of specific persons showing a specific phenotype given the family history and genetic observations.
 
