@@ -9,11 +9,11 @@ PRIMO
 [![Code Climate](https://codeclimate.com/github/sotoseattle/Primo/badges/gpa.svg)](https://codeclimate.com/github/sotoseattle/Primo)
 
 
-In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex, difficult but a lot of fun because of all the possibilities this field opens up. This gem is a liberal translation of the code I worked with in Octave throughout the course and that I used to learn python during 2013.
+In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex and difficult, but a lot of fun because of all the possibilities it opens up. This gem is a liberal translation of the code I worked with in Octave throughout the course, and which later I coded in python to learn the language.
+<img src="public/images/dice.png" width="300px" align="right"/>
+I have decided to code in Ruby instead of Python for two reasons: i) Ruby is specially flexible when building prototypes and ii) the apps that I would like to build around this inference engine will require a flexibility and abilities beyond computational performance. If I was obsessed only with the engine per-se I would code it in Julia or C, but I am in this for the fun and the possibilities, and besides all reasons, Ruby is just a pleasure to play with.
 
-I have decided to code in Ruby instead of Python for two reasons: i) Ruby is more flexible when building prototypes and ii) the apps that I would like to build around this inference engines will require a flexibility and abilities on which Ruby shines. If I was obsessed only with the engine per-se I would code it in Julia or heave forbid C, but I am in this for the fun and the possibilities, and Ruby is a pleasure to play with.
-
-Sincere thanks to Masahiro Tanaka for his wonderful [NArray gem](http://masa16.github.io/narray/), which allows me to, for example, to multiply two multi-dimensional arrays element-wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
+Sincere thanks to Masahiro Tanaka for his wonderful [NArray gem](http://masa16.github.io/narray/), which allows me to, for example, multiply two multi-dimensional arrays element-wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
 
 I have christened this working library PRIMO (Probabilistic Inference Modeling) because in Spanish it means either prime, first, cousin or dumb! :)
 
@@ -49,7 +49,7 @@ gem install ./soto-primo-0.0.1.gem
 - The main dependency is the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), version 0.6.
 - The test are written for RSpec 3.1.2.
 
-To use it in your code add to your Gemfile:
+To use it in your code, add to your Gemfile:
 
 ```ruby
 # Gemfile
@@ -69,13 +69,13 @@ API
 Random Variable
 ----------------
 
-The essential building block of Primo, similar to Nodes in graphs, each holds the following instance variables:
+The essential building block of Primo, each holds the following instance variables:
 
-- **cardinality**. For example, a binary variable that can only take two values (true-false, 0-1) and therefore it has a cardinality of 2. The roll of a dice would have cardinality of 6, because the the outcome can take 6 different values: 1, 2, 3, 4, 5 or 6.
-- **ass** (assignments). An ordered array with all the possible assignments. If no assignments are given it uses integers starting from 0. The previous dice roll would have an ass of [0, 1, 2, 3, 4, 5]; a binary variable would have an ass of [0, 1]. We can also make a binary random variable for the health of a patient with the assignment array ['healthy', 'sick'].
+- **cardinality**. For example, a binary variable that can only take two values (true-false, 0-1) has a cardinality of 2. The roll of a dice would have cardinality of 6, because the outcome can take 6 different values: 1, 2, 3, 4, 5 or 6.
+- **ass** (assignments). An ordered array with all the possible assignments. If no assignments are given it uses integers starting from 0. The previous dice roll would have an ass of [0, 1, 2, 3, 4, 5] if not already initialized to (1..6). A binary variable would have a default ass of [0, 1], or we could create our own the assignments ['up', 'down'].
 - **name**. Just a name to make it easier to identify the variable.
 
-An important detail is how we define the <=> operator because we will be comparing between random variables based on their internal object ids. This is necessary because later on, when we multiply sets of variables, we will do it according to their order. The order itself doesn't matter, all we'll need is that there is a way to order them in a stable, immutable and persistent way.
+An important detail is how we define the <=> operator, which compares random variables based on their internal object ids. This is necessary because later on, when we multiply sets of variables, we will do it according to their order. The order itself doesn't matter, all we'll need is that there is a way to order them in a stable, immutable and persistent way.
 
 ```ruby
   def initialize(args)
@@ -117,13 +117,13 @@ We compute the joint probability table as a factor that holds both variables, so
 So we see that a factor's state includes both
 
 - the set of variables it holds `@vars` kept in an array.
-- the values of all possible outcomes `@vals`, stored in an N-array, a multidimensional array, where each dimension correspond to a random variable.
+- the values of all possible outcomes `@vals`, stored in a multidimensional array, where each dimension correspond to a random variable.
 
 ### Operations
 
 #### Marginalization
 
-We want to eliminate a dimension, (a variable or axis), by adding all values along the eliminated axis. In our coins example, given a factor with two variables (true coin and biased coin), if we now want to marginalized the biased coin we end up with a new factor that only holds the variable of the true coin (A), and whose probabilities are computed adding up probabilities of the eliminated variable.
+Marginalization is about eliminating a dimension, (a variable or axis), of the Factor. We do it by adding all values along the eliminated axis. In our coins example, given a factor with two variables (true coin and biased coin), if we marginalize the biased coin (B) we end up with a new factor that only holds the variable of the true coin (A), and whose probabilities are computed adding up probabilities of the eliminated variable.
 
 
 <p align="center">
@@ -366,8 +366,6 @@ For example, the following Pairwise Markov Grid...
 #### Pruning the Tree
 
 The problem is that many times, the clique tree will be unnecessary big. Many cliques will be subsets of others. It makes sense to collect them together than keep them alive and repeat unnecessary motions. For example, if we have all the info in a clique with variables A,B,C we don't need another clique (node) that holds variables A and B, since the first one already has it all. We can create a more compact and efficient tree if we prune these unnecessary nodes.
-
-The process is not complicated: Go over all the nodes of the tree one at a time. For each one get its connected nodes (neighbors) and go through them. If the variable set of the node under study is a strict subset of the variable set of one of its connected neighbors we can prune the subset node. The key step is to reconnect the superset node to all the other neighbors of the subset node. Then we just delete the subset node and its associated row and column from the edges matrix.
 
 For example, imagine the following clique tree:
 
