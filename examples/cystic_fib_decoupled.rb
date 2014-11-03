@@ -1,20 +1,11 @@
 # GENETIC BAYESIAN NETWORK II
-# computed as a whole joint probability factor of ALL variables
-# even more brutish than because decoupling means more variables and dimensions
+# computed as a whole joint probability factor of ALL variables, even more
+# brutish than before because decoupling means more variables and dimensions
+# The factors are hard-coded
 
 require 'primo'
-
-class PhenoType < RandomVar
-  def initialize(name)
-    super(card: 2, name: name, ass: %w(present absent))
-  end
-end
-
-class AlleleType < RandomVar
-  def initialize(name)
-    super(card: 3, name: name, ass: %w(F f n))
-  end
-end
+require './vars.rb'
+require './family.rb'
 
 class Person
   private
@@ -27,24 +18,24 @@ class Person
 
   def initialize(name)
     @name = name
-    @pheno = PhenoType.new(name)
+    @pheno = Phenotype.new(name)
     @allel_1 = AlleleType.new(name)
     @allel_2 = AlleleType.new(name)
   end
 
-  def is_son_of(daddy, mommy)
+  def son_of(daddy, mommy)
     self.dad = daddy
     self.mom = mommy
   end
 
   def alleles_factors_probabilistic
-    f1 = Factor.new(vars: [allel_1], vals: [0.1, 0.7, 0.2])
-    f2 = Factor.new(vars: [allel_2], vals: [0.1, 0.7, 0.2])
-    (f1 * f2).norm
+    Factor.new(vars: [allel_1, allel_2],
+               vals: [[0.01, 0.07, 0.02], [0.07, 0.49, 0.14], [0.02, 0.14, 0.04]])
   end
 
   def alleles_factors_genetic
-    vals = [1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0]
+    vals = [1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.0, 1.0,
+            0.0, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0]
     f1 = Factor.new(vars: [allel_1, dad.allel_1, dad.allel_2], vals: vals)
     f2 = Factor.new(vars: [allel_2, mom.allel_1, mom.allel_2], vals: vals)
     (f1 * f2).norm
@@ -52,7 +43,8 @@ class Person
 
   def phenotype_factor
     vars = [pheno, allel_1, allel_2]
-    vals = [0.8, 0.2, 0.6, 0.4, 0.1, 0.9, 0.6, 0.4, 0.5, 0.5, 0.05, 0.95, 0.1, 0.9, 0.05, 0.95, 0.01, 0.99]
+    vals = [0.8, 0.2, 0.6, 0.4, 0.1, 0.9, 0.6, 0.4, 0.5, 0.5, 0.05, 0.95, 0.1,
+            0.9, 0.05, 0.95, 0.01, 0.99]
     Factor.new(vars: vars, vals: vals)
   end
 
@@ -71,43 +63,17 @@ class Person
   end
 end
 
-class Family
-  attr_reader :members
-
-  def initialize(names)
-    @members = names.map { |name| Person.new(name) }
-  end
-
-  def compute_factors
-    members.each(&:compute_factors)
-  end
-
-  def compute_whole_joint
-    fs = members.map(&:factor)
-    fs.unshift(fs.first.to_ones)
-    fs.reduce { |a, b| (a * b).norm }
-  end
-
-  def [](name)
-    members.find { |p| p.name == name }
-  end
-end
-
 ####################################################################
 #########################   TESTING   ##############################
 ####################################################################
-# Beware, adding Sandra makes the joint CPD so huge that it blows
+# Beware, adding another child (Sandra) makes the joint CPD so huge that it blows
 # a segmentation error. The resulting NArray is too big
 
-# a = Family.new(%w{Ira Robin Aaron Rene James Eva Sandra Jason Benito})
-# a = Family.new(%w{Ira Robin Rene James Eva Benito Sandra})
 a = Family.new(%w(Ira Robin Rene James Eva Benito))
 
-a['James'].is_son_of(a['Ira'], a['Robin'])
-a['Eva'].is_son_of(a['Ira'], a['Robin'])
-# a['Sandra'].is_son_of(a['Aaron'], a['Eva'])
-# a['Jason'].is_son_of(a['James'], a['Rene'])
-a['Benito'].is_son_of(a['James'], a['Rene'])
+a['James'].son_of(a['Ira'], a['Robin'])
+a['Eva'].son_of(a['Ira'], a['Robin'])
+a['Benito'].son_of(a['James'], a['Rene'])
 
 a.compute_factors
 

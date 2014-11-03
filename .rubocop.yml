@@ -4,6 +4,9 @@ Documentation:
 LineLength:
   Max: 90
 
+Void:
+  Enabled: false
+
 AllCops:
   RunRailsCops: true
   Include:

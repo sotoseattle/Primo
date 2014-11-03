@@ -1,20 +1,11 @@
 # GENETIC BAYESIAN NETWORK I
 # computed as a whole joint probability factor of ALL variables
 # very brutish and primitive but helps test and benchmark factor operations
+# Factors are shown hardcoded.
 
 require 'primo'
-
-class Phenotype < RandomVar
-  def initialize(name)
-    super(card: 2, name: name, ass: %w(present absent))
-  end
-end
-
-class Genotype < RandomVar
-  def initialize(name)
-    super(card: 3, name: name, ass: %w(FF Ff ff))
-  end
-end
+require './vars.rb'
+require './family.rb'
 
 class Person
   private
@@ -36,7 +27,7 @@ class Person
     @mom = nil
   end
 
-  def is_son_of(daddy, mommy)
+  def son_of(daddy, mommy)
     self.dad = daddy
     self.mom = mommy
   end
@@ -52,26 +43,15 @@ class Person
     Factor.new(vars: [phn, gen], vals: values)
   end
 
-  # VERY FUGLY AND COUPLED
-  # REFACTOR AND GENERALIZE ALL GEN_
-  def gen_probabilistic(stats)
-    combis = %w(F f).product(%w(F f)).map { |e| e.sort.join }
-    values = gen.ass.map do |k|
-      combis.count(k) * (stats[k[0]] * stats[k[1]])
-    end
-    Factor.new(vars: [gen], vals: values)
+  def gen_probabilistic(_stats)
+    Factor.new(vars: [gen], vals: [0.01, 0.18, 0.81])
   end
 
   def gen_parental
-    na = NArray.float(3, 3, 3)
-    dad.gen.ass.each_with_index do |dad_gen, i|
-      mom.gen.ass.each_with_index do |mom_gen, j|
-        d, m = dad_gen.split(''), mom_gen.split('')
-        combinations = d.product(m).map { |e| e.sort.join }
-        na[true, i, j] = gen.ass.map { |k| combinations.count(k) / 4.0 }
-      end
-    end
-    Factor.new(vars: [gen, dad.gen, mom.gen], vals: na)
+    vals = [[[1.0, 0.0, 0.0], [0.5, 0.5, 0.0],   [0.0, 1.0, 0.0]],
+            [[0.5, 0.5, 0.0], [0.25, 0.5, 0.25], [0.0, 0.5, 0.5]],
+            [[0.0, 1.0, 0.0], [0.0, 0.5, 0.5],   [0.0, 0.0, 1.0]]]
+    Factor.new(vars: [gen, dad.gen, mom.gen], vals: vals)
   end
 
   def observe_pheno(ass)
@@ -83,39 +63,17 @@ class Person
   end
 end
 
-class Family
-  attr_reader :members
-
-  def initialize(names)
-    @members = names.map { |name| Person.new(name) }
-  end
-
-  def compute_factors
-    members.each(&:compute_factors)
-  end
-
-  def compute_whole_joint
-    fs = members.map(&:factor)
-    fs.unshift(fs.first.to_ones)
-    fs.reduce { |a, b| (a * b).norm }
-  end
-
-  def [](name)
-    members.find { |p| p.name == name }
-  end
-end
-
 ####################################################################
 #########################   TESTING   ##############################
 ####################################################################
 
 a = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito))
 
-a['James'].is_son_of(a['Ira'], a['Robin'])
-a['Eva'].is_son_of(a['Ira'], a['Robin'])
-a['Sandra'].is_son_of(a['Aaron'], a['Eva'])
-a['Jason'].is_son_of(a['James'], a['Rene'])
-a['Benito'].is_son_of(a['James'], a['Rene'])
+a['James'].son_of(a['Ira'], a['Robin'])
+a['Eva'].son_of(a['Ira'], a['Robin'])
+a['Sandra'].son_of(a['Aaron'], a['Eva'])
+a['Jason'].son_of(a['James'], a['Rene'])
+a['Benito'].son_of(a['James'], a['Rene'])
 
 a.compute_factors
 

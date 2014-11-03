@@ -452,11 +452,11 @@ And our coded example (cystic_fib_joint_cpd.rb) has the following family tree an
 ```ruby
 smiths = Family.new(%w(Ira Robin Aaron Rene James Eva Sandra Jason Benito))
 
-simths['James'].is_son_of(simths['Ira'], simths['Robin'])
-simths['Eva'].is_son_of(simths['Ira'], simths['Robin'])
-simths['Sandra'].is_son_of(simths['Aaron'], simths['Eva'])
-simths['Jason'].is_son_of(simths['James'], simths['Rene'])
-simths['Benito'].is_son_of(simths['James'], simths['Rene'])
+simths['James'].son_of(simths['Ira'], simths['Robin'])
+simths['Eva'].son_of(simths['Ira'], simths['Robin'])
+simths['Sandra'].son_of(simths['Aaron'], simths['Eva'])
+simths['Jason'].son_of(simths['James'], simths['Rene'])
+simths['Benito'].son_of(simths['James'], simths['Rene'])
 
 smiths.compute_factors
 ```
@@ -541,7 +541,7 @@ License
 
 The MIT License
 
-Copyright (c) 2013 Javier Soto
+Copyright (c) 2013-2014 Javier Soto
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
