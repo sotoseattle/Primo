@@ -8,6 +8,15 @@ PRIMO
 [![Dependency Status](https://gemnasium.com/sotoseattle/Primo.svg)](https://gemnasium.com/sotoseattle/Primo)
 [![Code Climate](https://codeclimate.com/github/sotoseattle/Primo/badges/gpa.svg)](https://codeclimate.com/github/sotoseattle/Primo)
 
+
+In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex, difficult but a lot of fun because of all the possibilities this field opens up. This gem is a liberal translation of the code I worked with in Octave throughout the course and that I used to learn python during 2013.
+
+I have decided to code in Ruby instead of Python for two reasons: i) Ruby is more flexible when building prototypes and ii) the apps that I would like to build around this inference engines will require a flexibility and abilities on which Ruby shines. If I was obsessed only with the engine per-se I would code it in Julia or heave forbid C, but I am in this for the fun and the possibilities, and Ruby is a pleasure to play with.
+
+Sincere thanks to Masahiro Tanaka for his wonderful [NArray gem](http://masa16.github.io/narray/), which allows me to, for example, to multiply two multi-dimensional arrays element-wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
+
+I have christened this working library PRIMO (Probabilistic Inference Modeling) because in Spanish it means either prime, first, cousin or dumb! :)
+
 Table of Contents
 =================
 
@@ -55,18 +64,6 @@ And require it in your code:
 require 'primo'
 ```
 
-Intro
-=====
-
-In 2013 I took the online course "Probabilistic Graphical Models" (Stanford, Prof. Daphne Koller) from [Coursera.org](https://www.coursera.org/course/pgm). It was complex, difficult but a lot of fun because of all the possibilities it opened up for me. This gem is a liberal translation of the code I worked with in Octave throughout the course.
-
-I have decided to code in Ruby instead of Python (for which I had a previous version) because Ruby is more flexible when building prototypes. The apps that I would like to build around ML are like cars. The engine may be a key component and its performance paramount, but there is more to a car than its engine. These apps will be more than its inference engine, and in all those other aspects Ruby shines. If I was obsessed only with the engine I would have code it in Julia or C, but I am in this for the fun and the possibilities, and Ruby is a pleasure to play with.
-
-Besides, what I have already coded in Ruby is already faster than my Python code (which shows what a beginner I am in Python). The key to the performance boost has been the use of the [NArray gem from Masahiro Tanaka](http://masa16.github.io/narray/), which allows me to, for example, multiply two multidimensional arrays element wise in a single step, after aligning them with simple rotations of their axes (actually pretty cool).
-
-I have christened this working library PRIMO (Probabilistic Inference Modeling) because in Spanish it means either prime, first, cousin or dumb! :)
-
-
 API
 ===
 
@@ -113,9 +110,9 @@ For example, let's say we have two coins, one true and one biased. We declare tw
 
 We compute the joint probability table as a factor that holds both variables, so in tabular form we have now 4 different outcomes (possible outcomes) and 4 different values (probabilities of each assignment).
 
-<div style="text-align:center">
-  <img src="public/images/coins.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/coins.png" />
+</p>
 <br>
 
 So we see that a factor's state includes both
@@ -130,18 +127,18 @@ So we see that a factor's state includes both
 We want to eliminate a dimension, (a variable or axis), by adding all values along the eliminated axis. In our coins example, given a factor with two variables (true coin and biased coin), if we now want to marginalized the biased coin we end up with a new factor that only holds the variable of the true coin (A), and whose probabilities are computed adding up probabilities of the eliminated variable.
 
 
-<div style="text-align:center">
-  <img src="public/images/margin_coins.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/margin_coins.png" />
+</p>
 <br>
 
 We alias the method to the modulus operator `%` for syntactical convenience. This method also allows for chaining operations i.e. f1 % v1 % v2 eliminates in order, first v1 from f1, and then v2 from the resulting factor. Each time % kicks in, f1 is modified in place.
 
 Another example from a multidimensional array perpective. The following factor f1, has only those two random variables (v1, v2), reducing on v2 means selecting the axis for v2 and for each row of v1, adding up all columns of v2.
 
-<div style="text-align:center">
-  <img src="public/images/margin.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/margin.png" />
+</p>
 <br>
 
 The method marginalize_but is a fast implementation of marginalizing in bulk for all variables in the factor except for one that we want to extract. In this operation we end up with the final probabilities of all assignments for that selected random variable.
@@ -165,16 +162,16 @@ The key methods. Given two factors I modify each one by:
 
 Continuing with the graphic example, to expand our previous factor (variables v1 and v2) by another variable (v3) we would start with the 2D values along axes v1, v2. Then we add a third dimension for v3.
 
-<div style="text-align:center">
-  <img src="public/images/multiply1.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/multiply1.png"/>
+</p>
 <br>
 
 And then we repeat the 2D matrix (v1,v2) along the v3 axis. In our case v1 and v2 have cardinality 2 and v3 has cardinality 3 so we repeat the 2D matrix twice more along the v3 axis.
 
-<div style="text-align:center">
-  <img src="public/images/multiply2.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/multiply2.png"/>
+</p>
 <br>
 
 At the end of the process we have two NArrays that represent the same variables, aligned and of the same shape. To multiply/add we only need to multiply/add them element wise. At the end of the day, this Ruby method is 30% smaller and yet faster than the python version.
@@ -227,9 +224,9 @@ Set values to 0.0 based on observed variables. For example, given a random varia
 
 In our coins example, if having the joint probability of variables A and B, we know toss the coin B and see that it is heads, we can modify the joint factor to say that since B was heads, every probability of B being tails should be 0.00. This operation modifies the values (making zero impossible outcomes) but still holds both variables. See how the resulting values are un-normalized and do not add to 1.00.
 
-<div style="text-align:center">
-  <img src="public/images/reduction_coins.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/reduction_coins.png" />
+</p>
 <br>
 
 We modify the NArray values by 1) selecting the observed variable axis and leaving all other axis untouched, and 2) for the selected axis, setting to 0. all cells that are not in the observation column.
@@ -353,16 +350,16 @@ To build a CT we need a list of factors from which we start deriving the set of 
 
 For example, the following Pairwise Markov Grid...
 
-<div style="text-align:center">
-  <img src="public/images/toy_grid.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/toy_grid.png" />
+</piv>
 <br>
 
 ... would create the following clique tree through variable elimination.
 
-<div style="text-align:center">
-  <img src="public/images/ct_toy_grid.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/ct_toy_grid.png" />
+</p>
 <br>
 
 
@@ -420,9 +417,9 @@ First we will study Cystic Fibrosis and the probability that a person will devel
 
 Given a family tree, for each member of the family we are going to have two nodes, one for the person’s genotype, and another for her phenotype. The template would be:
 
-<div style="text-align:center">
-  <img src="public/images/template.png" align="center" width="300"/>
-</div>
+<p align="center">
+  <img src="public/images/template.png" width="350"/>
+</p>
 <br>
 
 Where the random variables correspond to:
@@ -455,9 +452,9 @@ simths['Benito'].son_of(simths['James'], simths['Rene'])
 smiths.compute_factors
 ```
 
-<div style="text-align:center">
-  <img src="public/images/cysticBN.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/cysticBN.png" />
+</p>
 <br>
 
 I will build the factors that bind these variables depending on what genes are inherited and the probabilities of finding them in the general population. Check [here](http://localhost:4000/blog/2013/11/03/Genetic-BN/) to see how exactly I did it.
@@ -488,9 +485,9 @@ Running the same Genetic Network for cystic fibrosis using Clique Trees instead 
 
 The associated clique tree is similar to the following image. All potentials (factors) will hold a handful of variables instead of a multitude of them , and Belief Propagation allows us to query it instantaneously.
 
-<div style="text-align:center">
-  <img src="public/images/cystic_BN_clique.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/cystic_BN_clique.png" />
+</p>
 <br>
 
 We only need to create and calibrate the tree given the factors:
@@ -511,16 +508,16 @@ end
 
 In the same manner we can use Clique Trees to compute the example on cystic_fib_decoupled.rb, that has an even bigger joint table because now each gene is decoupled in the following manner:
 
-<div style="text-align:center">
-  <img src="public/images/decoup_cysticBN.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/decoup_cysticBN.png" />
+</p>
 <br>
 
 And the Clique Tree that results is still very small and easy to traverse.
 
-<div style="text-align:center">
-  <img src="public/images/cystic_decoup_BN_clique.png" align="center" />
-</div>
+<p align="center">
+  <img src="public/images/cystic_decoup_BN_clique.png" />
+</p>
 <br>
 
 You can imagine that as we add people, variables and nodes, the only sane way to go about is with Clique Trees. This gem provides the tools to create complex inference based on Bayesian Networks.
